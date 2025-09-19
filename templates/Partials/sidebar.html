@@ -1,0 +1,107 @@
+<!-- ===== Hamburger button for mobile ===== -->
+<button class="btn btn-success d-md-none mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+    &#9776; Menu
+</button>
+
+<!-- ===== Sidebar ===== -->
+<nav id="sidebarMenu" class="col-12 col-md-3 col-lg-2 d-md-block sidebar p-3">
+
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
+                   href="{% url 'home' %}">
+                    <i class="bi bi-house-fill me-2"></i>
+                    Home
+                </a>
+            </li>
+            <li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'boundary_mapping' %}active{% endif %}" 
+       href="{% url 'boundary_mapping' %}">
+        <i class="bi bi-map me-2"></i>
+        Boundary Mapping
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'fertilizer_recommendation' %}active{% endif %}" 
+       href="{% url 'fertilizer_recommendation' %}">
+        <i class="bi bi-plus-circle me-2"></i>
+        Fertilizer Recommendation
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'ndvi_explorer' %}active{% endif %}" 
+       href="{% url 'ndvi_explorer' %}">
+        <i class="bi bi-graph-up me-2"></i>
+        NDVI Explorer
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'plant_disease' %}active{% endif %}" 
+       href="{% url 'plant_disease' %}">
+        <i class="bi bi-biohazard me-2"></i>
+        Plant Disease
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'soil_nutrients' %}active{% endif %}" 
+       href="{% url 'soil_nutrients' %}">
+        <i class="bi bi-droplet me-2"></i>
+        Soil Nutrients
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'soil_taxonomic_groups' %}active{% endif %}" 
+       href="{% url 'soil_taxonomic_groups' %}">
+        <i class="bi bi-file-earmark-text me-2"></i>
+        Soil Taxonomy
+    </a>
+</li>
+
+
+        </ul>
+    </div>
+</nav>
+
+<!-- ===== Sidebar CSS ===== -->
+<style>
+/* Sidebar container */
+.sidebar {
+    background-color: #2c2c2c; /* Dark grey, can switch to #1b3a2a for green */
+    border-radius: 20px;        /* Rounded edges for the sidebar */
+    min-height: 90vh;          /* Full viewport height */
+}
+
+/* Each link as container */
+.sidebar .nav-link {
+    display: block;             /* Make entire area clickable */
+    padding: 12px 18px;         /* Bigger clickable area */
+    border-radius: 7.5px;        /* Rounded links */
+    margin-bottom: 8px;         /* Space between links */
+    color: #ffffff;             /* White text */
+    transition: background 0.3s, color 0.3s; /* Smooth hover effect */
+}
+
+/* Hover effect for links */
+.sidebar .nav-link:hover {
+    background-color: #4a6b50;  /* Darker shade on hover */
+    color: #ffffff;
+}
+
+/* Active page link */
+.sidebar .nav-link.active {
+    background-color: #198754;  /* Highlight active link */
+    color: #ffffff;
+}
+
+/* Hamburger button styling */
+.btn-success {
+    background-color: #198754;  /* Green */
+    border: none;
+}
+</style>

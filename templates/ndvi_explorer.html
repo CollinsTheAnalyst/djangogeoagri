@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}NDVI Explorer{% endblock %}
+
+{% block content %}
+<h1>NDVI Explorer</h1>
+<p>Welcome to the NDVI Explorer page. The sidebar remains visible on the left while this content loads on the right.</p>
+
+<!-- Example content for layout demonstration -->
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">NDVI Time Series</h5>
+        <p class="card-text">This section will display NDVI charts for selected farms or regions.</p>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">Satellite Imagery</h5>
+        <p class="card-text">Placeholder for Sentinel-2 or other satellite imagery visualizations.</p>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">Farm Selection</h5>
+        <p class="card-text">Add dropdowns or controls to select counties, farms, or date ranges.</p>
+    </div>
+</div>
+{% endblock %}
