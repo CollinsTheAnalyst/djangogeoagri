@@ -1,0 +1,53 @@
+{% extends 'base_auth.html' %}
+{% load static %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<h4 class="text-center mb-3">Register</h4>
+
+
+<form method="POST" id="registerForm">
+    {% csrf_token %}
+    
+    <!-- Username -->
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" name="username" id="username" class="form-control" required>
+        <!-- JS will insert feedback <small> here -->
+    </div>
+    
+    <!-- Email -->
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" name="email" id="email" class="form-control" required>
+        <!-- JS will insert feedback <small> here -->
+    </div>
+    
+    <!-- Passwords -->
+    <div class="mb-3">
+        <label for="password1" class="form-label">Password</label>
+        <input type="password" name="password1" id="password1" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="password2" class="form-label">Confirm Password</label>
+        <input type="password" name="password2" id="password2" class="form-control" required>
+    </div>
+    
+    <!-- Submit -->
+    <button type="submit" class="btn btn-success w-100">Register</button>
+
+    <!-- Display error messages if any (server-side) -->
+    {% if error %}
+    <div class="alert alert-danger text-center">{{ error }}</div>
+    {% endif %}
+</form>
+
+<!-- Link to login -->
+<div class="text-center mt-3">
+    <a href="{% url 'login' %}">Already have an account? Login</a>
+</div>
+
+<!-- Attach JS -->
+<script src="{% static 'js/register.js' %}"></script>
+{% endblock %}

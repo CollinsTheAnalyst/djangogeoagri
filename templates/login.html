@@ -1,0 +1,36 @@
+{% extends 'base_auth.html' %}
+{% load static %}
+
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h4 class="text-center mb-3">Login</h4>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="text" name="email" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
+</form>
+
+<!-- Error message (if any) -->
+{% if error %}
+<div class="alert alert-danger mt-3" role="alert">
+    {{ error }}
+</div>
+{% endif %}
+
+<div class="text-center mt-3 auth-links">
+    <a href="{% url 'register' %}">Create an account</a> |
+    <a href="{% url 'reset_password' %}">Forgot password?</a>
+</div>
+{% endblock %}
+
+<script src="{% static 'js/login.js' %}"></script>

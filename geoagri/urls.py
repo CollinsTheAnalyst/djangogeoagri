@@ -18,8 +18,9 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('', include('agrigeo.urls')),  # delegate root URLs to agrigeo app
-    path('admin/', admin.site.urls),
+    path('', include('agrigeo.urls')),       # main app routes
+    path('accounts/', include('accounts.urls')),  # authentication routes
+    path('admin/', admin.site.urls),         # Django admin
 ]
 
 
