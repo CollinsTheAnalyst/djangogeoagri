@@ -1,7 +1,43 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Boundary Mapping{% endblock %}
+
 {% block content %}
 <h1>Boundary Mapping</h1>
-<p>Welcome to the Boundary Mapping page.</p>
+<p>Enter your farm name, search for the location, then draw your farm boundaries.</p>
+
+<!-- Farm Name Input -->
+<div style="margin-bottom: 10px;">
+    <label for="farm-name">Farm Name:</label>
+    <input type="text" id="farm-name" placeholder="Enter farm name" style="width: 150px; padding: 4px;">
+</div>
+
+
+<!-- Map Container -->
+<div id="map" style="height: 700px; margin-bottom: 20px;"></div>
+
+<!-- Area Info -->
+<div id="area-info"></div>
 {% endblock %}
-<p>The sidebar remains visible on the left while this content loads on the right.</p>
+
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link
+ rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.3/src/leaflet.geometryutil.js"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'js/boundary_mapping.js' %}"></script>
+
+
+{% endblock %}

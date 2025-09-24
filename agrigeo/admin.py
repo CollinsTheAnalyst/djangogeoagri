@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import FarmBoundary
 
-# Register your models here.
+@admin.register(FarmBoundary)
+class FarmBoundaryAdmin(admin.ModelAdmin):
+    list_display = ("name", "owner", "created_at")

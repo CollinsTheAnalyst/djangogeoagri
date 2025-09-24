@@ -42,9 +42,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
+    'leaflet',
     'agrigeo',
-    'accounts'
+    'accounts',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -135,13 +138,28 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# URL for static files
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'Static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Folder where collectstatic will copy files for production
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # separate folder
+
+# Additional folders where Django will look for static files in development
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # your dev static files (js, css, images)
+
 
 # settings.py
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Leaflet configuration
+LEAFLET_CONFIG = {
+    'DEFAULT_CENTER': (-1.0, 37.0),
+    'DEFAULT_ZOOM': 8,
+    'MIN_ZOOM': 3,
+    'MAX_ZOOM': 18,
+    'TILES': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+}
 
 
