@@ -1,30 +1,126 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Soil Nutrients{% endblock %}
 
 {% block content %}
-<h1>Soil Nutrients</h1>
-<p>Welcome to the Soil Nutrients page. The sidebar remains visible on the left while this content loads on the right.</p>
+<h1 class="mb-3">🧪 Soil Nutrients Explorer</h1>
 
-<!-- Example content for layout demonstration -->
-<div class="card mt-3">
-    <div class="card-body">
-        <h5 class="card-title">Soil Test Summary</h5>
-        <p class="card-text">Display N, P, K, pH, and EC levels for selected farms or plots.</p>
-    </div>
-</div>
+<!-- Main Panel -->
+<div id="main-panel" style="margin-left: 20px; margin-right: 20px; position: relative;">
 
-<div class="card mt-3">
-    <div class="card-body">
-        <h5 class="card-title">Nutrient Recommendations</h5>
-        <p class="card-text">Provide suggested fertilizer applications based on soil test results.</p>
-    </div>
-</div>
+    <!-- Map Container -->
+    <div id="map"></div>
 
-<div class="card mt-3">
-    <div class="card-body">
-        <h5 class="card-title">Visual Charts</h5>
-        <p class="card-text">Add graphs or tables to visualize nutrient deficiencies and trends.</p>
+    <!-- Controls Panel -->
+    <div id="controls-panel" class="card shadow-lg">
+        <div class="card-body text-light d-flex flex-column h-100">
+            <h5 class="card-title text-center">Soil Nutrients Panel</h5>
+
+            <!-- Nutrient Checkboxes -->
+            <div class="mb-3">
+                <label class="form-label">Select Nutrients</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="N" id="nutrient-n">
+                    <label class="form-check-label" for="nutrient-n">Nitrogen (N)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="P" id="nutrient-p">
+                    <label class="form-check-label" for="nutrient-p">Phosphorus (P)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="K" id="nutrient-k">
+                    <label class="form-check-label" for="nutrient-k">Potassium (K)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Ca" id="nutrient-ca">
+                    <label class="form-check-label" for="nutrient-ca">Calcium (Ca)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Mg" id="nutrient-mg">
+                    <label class="form-check-label" for="nutrient-mg">Magnesium (Mg)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Fe" id="nutrient-fe">
+                    <label class="form-check-label" for="nutrient-fe">Iron (Fe)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Zn" id="nutrient-zn">
+                    <label class="form-check-label" for="nutrient-zn">Zinc (Zn)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="C" id="nutrient-carbon">
+                    <label class="form-check-label" for="nutrient-c">Carbon (C)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="CEC" id="nutrient-cec">
+                    <label class="form-check-label" for="nutrient-cec">CEC</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="pH" id="nutrient-ph">
+                    <label class="form-check-label" for="nutrient-ph">pH</label>
+                </div>
+            </div>
+
+            <!-- Instruction -->
+            <p class="small text-white">
+                Click on the map to get the soil nutrient data for your location.
+            </p>
+
+            <!-- Results Box -->
+            <div id="result-box" class="p-2 rounded bg-dark text-white border border-secondary mb-3" style="min-height:60px;">
+                <em>No data yet.</em>
+            </div>
+
+            <!-- Buttons (optional) -->
+            <div class="mt-auto">
+                <button id="download-btn" class="btn btn-outline-light w-100" disabled>
+                    ⬇ Download Data
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+/* Map */
+#map {
+    border-radius: 8px;
+    height: 800px;
+    width: calc(100% - 380px);  /* 350px panel + 30px margin */
+    z-index: 1;
+}
+
+/* Controls Panel */
+#controls-panel {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    height: 800px;
+    width: 350px;
+    background: rgba(33, 37, 41, 0.95);
+    border-radius: 20px;
+    z-index: 1000;
+}
+#controls-panel .form-label,
+#controls-panel .card-title { color: #f8f9fa; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Bootstrap Bundle -->
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Leaflet -->
+<script src="{% static 'js/leaflet.js' %}"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Soil Nutrients Logic -->
+<script src="{% static 'js/soil_nutrients.js' %}"></script>
+{% endblock %}
+

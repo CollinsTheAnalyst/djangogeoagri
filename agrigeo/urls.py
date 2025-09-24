@@ -16,6 +16,7 @@ urlpatterns = [
     path('get-counties/', views.get_counties, name='get_counties'),
     path('point-time-series/', views.point_time_series, name='point_time_series'),
     path('get-county-geometry/', views.get_county_geometry, name='get_county_geometry'),
+    path('get-soil-data/', views.get_soil_data, name='get_soil_data'), 
 ]
 
     

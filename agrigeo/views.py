@@ -50,109 +50,172 @@ def soil_taxonomic_groups(request):
 @csrf_exempt
 def save_boundary(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-        geojson = data.get("geojson")
-        name = data.get("name", "My Farm")
+        try:
+            data = json.loads(request.body)
+            geojson = data.get("geojson")
+            name = data.get("name", "My Farm")
 
-        # Convert GeoJSON to GEOSGeometry
-        geom = GEOSGeometry(json.dumps(geojson["geometry"]))
+            geom = GEOSGeometry(json.dumps(geojson["geometry"]))
 
-        # Save boundary
-        boundary = FarmBoundary.objects.create(
-            owner=request.user,
-            name=name,
-            boundary=geom
-        )
-        return JsonResponse({"status": "success", "id": boundary.id})
+            boundary = FarmBoundary.objects.create(
+                owner=request.user,
+                name=name,
+                boundary=geom
+            )
+            return JsonResponse({"status": "success", "id": boundary.id})
+        except Exception as e:
+            return JsonResponse({"status": "failed", "error": str(e)}, status=400)
 
-    return JsonResponse({"status": "failed"}, status=400)
+    return JsonResponse({"status": "failed", "error": "POST request required"}, status=400)
 
 
+@login_required
 def get_counties(request):
-    kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
-    county_names = kenya_counties.aggregate_array("COUNTY").distinct().getInfo()
-    return JsonResponse({"counties": county_names})
+    try:
+        kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
+        county_names = kenya_counties.aggregate_array("COUNTY").distinct().getInfo()
+        return JsonResponse({"counties": county_names})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @login_required
 def get_county_geometry(request):
-    """
-    Returns the GeoJSON geometry of a selected county.
-    Expects GET parameter: ?county=<county_name>
-    """
     county_name = request.GET.get("county")
     if not county_name:
         return JsonResponse({"error": "County name not provided"}, status=400)
+    try:
+        kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
+        county_fc = kenya_counties.filter(ee.Filter.eq("COUNTY", county_name))
+        county_feature = county_fc.first()
 
-    kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
-    county_fc = kenya_counties.filter(ee.Filter.eq("COUNTY", county_name))
-    county_feature = county_fc.first()
+        if not county_feature:
+            return JsonResponse({"error": "County not found"}, status=404)
 
-    if not county_feature:
-        return JsonResponse({"error": "County not found"}, status=404)
-
-    geojson = county_feature.geometry().getInfo()
-    return JsonResponse({"geometry": geojson}, safe=False)
+        geojson = county_feature.geometry().getInfo()
+        return JsonResponse({"geometry": geojson}, safe=False)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @login_required
 @csrf_exempt
 def point_time_series(request):
-    """
-    Returns NDVI/EVI time series for a user-selected point on the map.
-    Expects JSON POST with lat, lng, metric, start_date, end_date
-    """
     if request.method != "POST":
         return JsonResponse({"status": "failed", "error": "POST request required"}, status=400)
-
-    body = json.loads(request.body)
-    lat = body.get("lat")
-    lng = body.get("lng")
-    metric = body.get("metric", "NDVI")
-    start_date = body.get("start_date")
-    end_date = body.get("end_date")
-
-    if not all([lat, lng, start_date, end_date]):
-        return JsonResponse({"status": "failed", "error": "Missing parameters"}, status=400)
-
-    point = ee.Geometry.Point([lng, lat])
-
-    # MODIS NDVI/EVI collection
-    collection = (
-        ee.ImageCollection("MODIS/061/MOD13Q1")
-        .filterBounds(point)
-        .filterDate(start_date, end_date)
-        .select([metric])
-        .map(lambda img: img.multiply(0.0001).copyProperties(img, ['system:time_start']))
-    )
-
-    # Map a function to extract mean values (no getInfo here)
-    def extract_feature(img):
-        date = ee.Date(img.get('system:time_start')).format('YYYY-MM-dd')
-        mean = img.reduceRegion(
-            reducer=ee.Reducer.mean(),
-            geometry=point,
-            scale=250,
-            bestEffort=True
-        ).get(metric)
-        return ee.Feature(None, {'date': date, 'value': mean})
-
-    ts_fc = collection.map(extract_feature)
-    
-    # Convert all features to a list and get info client-side
     try:
-       # Convert EE FeatureCollection to a Python list of dicts
-        ts_list = ts_fc.toList(ts_fc.size()).getInfo()  # fully resolves features
-        ts_list = [f['properties'] for f in ts_list]   # extract native dicts
+        body = json.loads(request.body)
+        lat = body.get("lat")
+        lng = body.get("lng")
+        metric = body.get("metric", "NDVI")
+        start_date = body.get("start_date")
+        end_date = body.get("end_date")
+
+        if not all([lat, lng, start_date, end_date]):
+            return JsonResponse({"status": "failed", "error": "Missing parameters"}, status=400)
+
+        point = ee.Geometry.Point([lng, lat])
+
+        collection = (
+            ee.ImageCollection("MODIS/061/MOD13Q1")
+            .filterBounds(point)
+            .filterDate(start_date, end_date)
+            .select([metric])
+            .map(lambda img: img.multiply(0.0001).copyProperties(img, ['system:time_start']))
+        )
+
+        def extract_feature(img):
+            date = ee.Date(img.get('system:time_start')).format('YYYY-MM-dd')
+            mean = img.reduceRegion(
+                reducer=ee.Reducer.mean(),
+                geometry=point,
+                scale=250,
+                bestEffort=True
+            ).get(metric)
+            return ee.Feature(None, {'date': date, 'value': mean})
+
+        ts_fc = collection.map(extract_feature)
+
+        ts_list = ts_fc.toList(ts_fc.size()).getInfo()
+        ts_list = [f['properties'] for f in ts_list]
+
+        df = pd.DataFrame(ts_list)
+        df = df.dropna(subset=['value'])
+        df['date'] = pd.to_datetime(df['date'])
+        df = df.sort_values('date')
+
+        return JsonResponse(df.to_dict(orient="records"), safe=False)
 
     except Exception as e:
         return JsonResponse({"status": "failed", "error": str(e)}, status=500)
 
-    # Convert to DataFrame
-    df = pd.DataFrame(ts_list)
-    df = df.dropna(subset=['value'])
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.sort_values('date')
 
-    return JsonResponse(df.to_dict(orient="records"), safe=False)
+@login_required
+@csrf_exempt
+def get_soil_data(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST request required"}, status=400)
+    try:
+        body = json.loads(request.body)
+        lat = body.get("lat")
+        lng = body.get("lng")
+        nutrients = body.get("nutrients", [])
+
+        if not all([lat, lng, nutrients]):
+            return JsonResponse({"error": "Missing parameters"}, status=400)
+
+        point = ee.Geometry.Point([lng, lat])
+
+        soil_layers = {
+            "pH": ee.Image("ISDASOIL/Africa/v1/ph").select('mean_0_20').divide(10),
+            "N": ee.Image("ISDASOIL/Africa/v1/nitrogen_total").select('mean_0_20').divide(100).exp().subtract(1),
+            "P": ee.Image("ISDASOIL/Africa/v1/phosphorus_extractable").select('mean_0_20').divide(10).exp().subtract(1),
+            "K": ee.Image("ISDASOIL/Africa/v1/potassium_extractable").select('mean_0_20').divide(10).exp().subtract(1),
+            "Ca": ee.Image("ISDASOIL/Africa/v1/calcium_extractable").select('mean_0_20').divide(10).exp().subtract(1),
+            "Mg": ee.Image("ISDASOIL/Africa/v1/magnesium_extractable").select('mean_0_20').divide(10).exp().subtract(1),
+            "CEC": ee.Image("ISDASOIL/Africa/v1/cation_exchange_capacity").select('mean_0_20').divide(10).exp().subtract(1),
+            "Fe": ee.Image("ISDASOIL/Africa/v1/iron_extractable").select('mean_0_20').divide(10).exp().subtract(1),
+            "Carbon": ee.Image("ISDASOIL/Africa/v1/carbon_organic").select('mean_0_20').divide(10).exp().subtract(1),
+            "Zn": ee.Image("ISDASOIL/Africa/v1/zinc_extractable").select('mean_0_20').divide(10).exp().subtract(1),
+        }
+
+        # Map nutrient codes from client to soil_layers keys
+        nutrient_code_map = {
+            "N": "N",
+            "P": "P",
+            "K": "K",
+            "Ca": "Ca",
+            "Mg": "Mg",
+            "C": "Carbon",  # fix for client sending "C"
+            "Fe": "Fe",
+            "Zn": "Zn",
+            "CEC": "CEC",
+            "pH": "pH"
+        }
+
+        results = {}
+        for nut in nutrients:
+            ee_key = nutrient_code_map.get(nut)
+            if ee_key and ee_key in soil_layers:
+                try:
+                    img = soil_layers[ee_key]
+                    val_dict = img.reduceRegion(
+                        reducer=ee.Reducer.mean(),
+                        geometry=point,
+                        scale=250,
+                        bestEffort=True
+                    ).getInfo()
+                    band_name = img.bandNames().get(0).getInfo()
+                    val = val_dict.get(band_name)
+                    results[nut] = round(val, 2) if val is not None else "No data"
+                except Exception as e:
+                    results[nut] = f"Error: {str(e)}"
+            else:
+                results[nut] = "Invalid nutrient"
+
+        return JsonResponse(results)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
 
