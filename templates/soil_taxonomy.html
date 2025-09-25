@@ -1,8 +1,126 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Soil Taxonomic Groups{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Soil Taxonomy</h1>
-    <p>This page will display soil taxonomic information. Content will be added soon.</p>
+<h1 class="mb-3">🌍 Soil Taxonomic Explorer</h1>
+
+<!-- Main Panel -->
+<div id="main-panel" style="margin-left: 20px; margin-top: 10px; margin-right: 20px; position: relative;">
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Info Panel -->
+    <div id="info-panel" class="card shadow-sm">
+        <h5 class="card-title">Soil Information</h5>
+        <div id="soil-info" class="p-2">
+            <!-- Soil details will appear here when a user clicks the map -->
+        </div>
+    </div>
 </div>
+
+<!-- Controls Panel -->
+<div id="controls-panel" class="card shadow-lg">
+    <div class="card-body text-light d-flex flex-column h-100">
+        <div class="mb-3">
+            <label for="county-select" class="form-label">County</label>
+            <select id="county-select" class="form-select">
+                <option value="">-- select County --</option>
+            </select>
+        </div>
+
+        <p class="small text-white">Click on the map within the selected county to get soil information.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+/* Controls Panel */
+#controls-panel {
+    position: absolute;
+    top: 150px;
+    right: 30px;
+    height: 150px;
+    width: 280px;
+    background: rgba(33, 37, 41, 0.95);
+    border-radius: 20px;
+    z-index: 1000;
+}
+#controls-panel .form-label,
+#controls-panel .card-title { color: #f8f9fa; }
+#controls-panel .form-select,
+#controls-panel .form-control { background-color: #212529; color: #f8f9fa; border: 1px solid #495057; }
+#controls-panel .form-select:focus,
+#controls-panel .form-control:focus { background-color: #2c3034; color: #fff; border-color: #0d6efd; box-shadow: none; }
+
+/* Map */
+#map {
+    border-radius: 8px;
+    margin-left: 5px;
+    height: 550px;
+    width: calc(100% - 290px);  /* 280px panel + 10px margin */
+    z-index: 1;
+}
+
+/* Info Panel */
+#info-panel { 
+    background: rgba(255,255,255,0.95);
+    width: calc(100% - 290px); 
+    border-radius: 15px;
+    height: 300px;
+    padding: 15px; 
+    margin-top: 20px;
+}
+
+/* Soil Info scroll */
+#soil-info {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Markdown content styling in info panel */
+#soil-info h3, #soil-info h4, #soil-info h5 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: #212529;
+}
+
+#soil-info p {
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    color: #212529;
+}
+
+#soil-info ul {
+    padding-left: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+#soil-info li {
+    margin-bottom: 0.3rem;
+}
+
+#soil-info strong {
+    color: #031125; /* Bootstrap primary color for bold highlights */
+}
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Bootstrap Bundle (with Popper) -->
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Leaflet -->
+<script src="{% static 'js/leaflet.js' %}"></script>
+
+<!-- Marked.js for rendering Markdown -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Soil Explorer logic -->
+<script src="{% static 'js/soiltaxonomy.js' %}"></script>
 {% endblock %}
