@@ -1,2 +1,5 @@
 gdal-bin
 libgdal-dev
+
+ln -s /usr/lib/x86_64-linux-gnu/libgdal.so /usr/lib/libgdal.so && pip install -r requirements-prod.txt
+
