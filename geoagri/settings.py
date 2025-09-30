@@ -12,15 +12,20 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 import platform
+import ctypes.util
 
 if platform.system() == "Windows":
-    # Local dev (conda on Windows)
+    # Local (conda)
     GDAL_LIBRARY_PATH = os.path.join(
         os.environ.get('CONDA_PREFIX', ''), 'Library', 'bin', 'gdal310.dll'
     )
 else:
-    # Linux (Render)
-    GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so'
+    # Linux (Render, Ubuntu/Debian)
+    gdal_lib = ctypes.util.find_library("gdal")
+    if gdal_lib:
+        GDAL_LIBRARY_PATH = gdal_lib
+    else:
+        GDAL_LIBRARY_PATH = "/usr/lib/x86_64-linux-gnu/libgdal.so"  # fallback
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
