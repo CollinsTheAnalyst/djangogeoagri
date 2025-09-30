@@ -11,10 +11,16 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
 from pathlib import Path
+import platform
 
-GDAL_LIBRARY_PATH = os.path.join(
-    os.environ.get('CONDA_PREFIX', ''), 'Library', 'bin', 'gdal310.dll'
-)
+if platform.system() == "Windows":
+    # Local dev (conda on Windows)
+    GDAL_LIBRARY_PATH = os.path.join(
+        os.environ.get('CONDA_PREFIX', ''), 'Library', 'bin', 'gdal310.dll'
+    )
+else:
+    # Linux (Render)
+    GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so'
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -94,6 +100,8 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 
 
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -125,11 +133,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = 'static/'
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -143,6 +146,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # separate folder
 
 # Additional folders where Django will look for static files in development
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # your dev static files (js, css, images)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # settings.py
