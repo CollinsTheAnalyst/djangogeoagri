@@ -9,6 +9,26 @@ from .legend import soil_code_guide
 import json
 import ee
 import pandas as pd
+import io
+import numpy as np
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from tensorflow.keras.preprocessing import image
+import os
+from django.conf import settings
+from tensorflow.keras.models import load_model
+from .models import Crop
+
+MODEL_PATH = os.path.join(settings.BASE_DIR, "agrigeo", "potatoes.h5")
+
+try:
+    MODEL = load_model(MODEL_PATH, compile=False)
+    print("MODEL:", MODEL)
+
+    
+except Exception as e:
+    MODEL = None
+    print("❌ Error loading model:", e)
+
 
 # Initialize Google Earth Engine
 ee.Initialize(project="ee-collinsmwiti98")
@@ -27,7 +47,9 @@ def boundary_mapping(request):
 
 @login_required
 def fertilizer_recommendation(request):
-    return render(request, 'fertilizer_recommendation.html')
+    crops = Crop.objects.all().order_by("name")  # fetch all crops
+    return render(request, 'fertilizer_recommendation.html', {"crops": crops})
+
 
 @login_required
 def ndvi_explorer(request):
@@ -295,4 +317,74 @@ def get_clipped_soils(request):
     
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+## Plant disease
+
+@csrf_exempt
+def predict_view(request):
+    print("=== predict_view called ===")
+    print("Request method:", request.method)
+    print("FILES:", request.FILES)
+    print("POST data:", request.POST)
+    
+    if request.method == "POST":
+        file: InMemoryUploadedFile = request.FILES.get("file")
+        crop = request.POST.get("crop")
+        print("Received file:", file)
+        print("Received crop:", crop)
+
+        if not file:
+            return JsonResponse({"error": "No file uploaded"}, status=400)
+
+        try:
+            # Read the image file into PIL
+            img = image.load_img(file, target_size=(224, 224))  # resize to match model input
+            img_array = image.img_to_array(img)
+            img_array = np.expand_dims(img_array, axis=0) / 255.0  # normalize
+
+            # Run prediction
+            preds = MODEL.predict(img_array)
+            predicted_class = int(np.argmax(preds[0]))
+            confidence = float(np.max(preds[0]))
+
+            # Dummy mapping (replace with your actual class labels)
+            class_labels = ["Healthy", "Disease A", "Disease B"]
+            disease = class_labels[predicted_class] if predicted_class < len(class_labels) else "Unknown"
+
+            # Example response
+            return JsonResponse({
+                "prediction": disease,
+                "confidence": confidence,
+                "stage": "Early",   # placeholder, can refine later
+                "treatment": "Apply recommended fungicide",  # placeholder
+            })
+        except Exception as e:
+            print("Prediction error:", e)
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request"}, status=405)
+
+
+
+# -------------------------
+# Fertilizer Recommendation page
+@login_required
+def get_crop_recommendation(request, crop_id):
+    try:
+        crop = Crop.objects.get(id=crop_id)
+        data = {
+            "id": crop.id,
+            "crop": crop.name,
+            "N": crop.n_kg_per_ha,
+            "P": crop.p_kg_per_ha,
+            "K": crop.k_kg_per_ha,
+            "unit": "kg/ha"
+        }
+        return JsonResponse(data)
+    except Crop.DoesNotExist:
+        return JsonResponse({"error": "Crop not found"}, status=404)
+
+
+    
+
 

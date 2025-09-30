@@ -1,7 +1,180 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Fertilizer Recommendation{% endblock %}
 
 {% block content %}
+<div class="page-container">
+    <h1>🌱 Fertilizer Recommendation System</h1>
+    <p style="text-align:center; margin-bottom:30px;">
+        This page provides a fertilizer recommendation system based on crop nutrient requirements.
+    </p>
+
+    <div class="columns">
+        <!-- Left Column -->
+        <div class="left-column">
+            <h2>Farm & Crop Information</h2>
+
+            <!-- Crop Selector -->
+            <label for="crop">Select Crop:</label>
+            <select id="crop" class="form-control">
+                <option value="">-- Select a Crop --</option>
+                {% for crop in crops %}
+                    <option value="{{ crop.id }}">{{ crop.name }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Farm Size Input -->
+            <div style="margin-top: 15px;">
+                <label for="size">Farm Size:</label>
+                <input type="number" id="size" class="form-control" value="1.0" min="0.1" step="0.1">
+                <select id="unit" class="form-control mt-2">
+                    <option value="Hectares">Hectares</option>
+                    <option value="Acres">Acres</option>
+                </select>
+            </div>
+
+            <!-- Optional Soil Test -->
+            <h2 class="mt-4">Soil Test Results (Optional)</h2>
+            <input type="number" placeholder="Soil N (%)" step="0.01" class="form-control mb-2">
+            <input type="number" placeholder="Soil P (ppm)" class="form-control mb-2">
+            <input type="number" placeholder="Soil K (ppm)" class="form-control mb-2">
+            <input type="number" placeholder="Soil pH" step="0.1" class="form-control mb-2">
+            <input type="number" placeholder="Soil EC (dS/m)" step="0.01" class="form-control mb-2">
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <h2>Nutrient Requirements</h2>
+            <table class="table table-bordered table-striped mt-2" id="nutrientTable">
+                <thead>
+                    <tr>
+                        <th>N (kg)</th>
+                        <th>P (kg)</th>
+                        <th>K (kg)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="nutrientValues">
+                        <td>0</td>
+                        <td>0</td>
+                        <td>0</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2 class="mt-4">Fertilizer Application Stage</h2>
+            <div class="mb-3">
+                <input type="radio" name="stage" id="planting" value="Planting" checked>
+                <label for="planting">Planting</label>
+                &nbsp;&nbsp;
+                <input type="radio" name="stage" id="topdressing" value="Top Dressing">
+                <label for="topdressing">Top Dressing</label>
+            </div>
+
+            <select id="fertilizer" class="form-control mb-3">
+                <option value="DAP">DAP</option>
+                <option value="CAN">CAN</option>
+                <option value="Urea">Urea</option>
+            </select>
+
+            <div class="recommendation-box">
+                <h3>Recommendation</h3>
+                <p id="recommendation">Select crop, farm size, and fertilizer to see recommendations.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles -->
+<style>
+.page-container {
+    background-color: #2c2c2c;
+    color: #e0e0e0; 
+    min-height: 850px;
+    width: 1500px;
+    margin: 10px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    border-radius: 20px;
+}
+
+.page-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2rem;
+}
+
+.columns {
+    display: flex;
+    gap: 30px;
+    max-width: 2000px;
+    margin: 0 10px;
+    min-height: 650px;
+}
+
+.left-column, .right-column {
+    background: #2a2f3a;
+    border: 1px solid #3d4452;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.left-column {
+    flex: 0 0 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.right-column {
+    flex: 1;
+}
+
+.recommendation-box {
+    margin-top: 20px;
+    padding: 15px;
+    height: 250px;
+    background: #2a2f3a;
+    border-radius: 10px;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-control {
+    width: 100%;
+    background: #2f3542;
+    color: #f1f1f1;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+.form-control::placeholder {
+    color: #bbb;
+}
+
+.form-control:focus {
+    background: #2f3542;
+    color: #fff;
+    border-color: #7ed957;
+    box-shadow: none;
+}
+
+.table {
+    background-color: #2a2f3a;
+    color: #e0e0e0;
+}
+
+.table thead {
+    background-color: #3a3f4d;
+    color: #7ed957;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #242933;
+}
+</style>
+
+<script src="{% static 'js/reccomendation.js' %}"></script>
 
 {% endblock %}

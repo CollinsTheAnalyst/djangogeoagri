@@ -21,5 +21,11 @@ urlpatterns = [
     # Soil taxonomy endpoints
     path('get-county-soils/', views.get_county_soils_with_names, name='get_county_soils_with_names'),
     path('get-soil-at-point/', views.get_soil_at_point, name='get_soil_at_point'),
-    path('get-clipped-soils/', views.get_clipped_soils, name='get_clipped_soils'),  # ← add this
+    path('get-clipped-soils/', views.get_clipped_soils, name='get_clipped_soils'),
+
+    # Plant disease
+    path('predict/', views.predict_view, name='predict'),
+
+    # Fertilizer Recommendation API
+    path('fertilizer-api/<int:crop_id>/', views.get_crop_recommendation, name='get_crop_recommendation'),
 ]
