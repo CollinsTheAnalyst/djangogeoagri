@@ -6,40 +6,43 @@
 {% block content %}
 <h4 class="text-center mb-3">Register</h4>
 
-
 <form method="POST" id="registerForm">
     {% csrf_token %}
-    
+
     <!-- Username -->
     <div class="mb-3">
         <label for="username" class="form-label">Username</label>
         <input type="text" name="username" id="username" class="form-control" required>
-        <!-- JS will insert feedback <small> here -->
+        <small id="usernameFeedback" class="text-danger"></small>
     </div>
-    
+
     <!-- Email -->
     <div class="mb-3">
         <label for="email" class="form-label">Email</label>
         <input type="email" name="email" id="email" class="form-control" required>
-        <!-- JS will insert feedback <small> here -->
+        <small id="emailFeedback" class="text-danger"></small>
     </div>
-    
-    <!-- Passwords -->
-    <div class="mb-3">
+
+    <!-- Password -->
+    <div class="mb-3 position-relative">
         <label for="password1" class="form-label">Password</label>
-        <input type="password" name="password1" id="password1" class="form-control" required>
+        <input type="password" name="password1" id="password1" class="form-control pr-5" required autocomplete="new-password">
+        <span id="togglePassword1Text" class="password-toggle">Show</span>
     </div>
-    <div class="mb-3">
+
+    <!-- Confirm Password -->
+    <div class="mb-3 position-relative">
         <label for="password2" class="form-label">Confirm Password</label>
-        <input type="password" name="password2" id="password2" class="form-control" required>
+        <input type="password" name="password2" id="password2" class="form-control pr-5" required autocomplete="new-password">
+        <span id="togglePassword2Text" class="password-toggle">Show</span>
     </div>
-    
+
     <!-- Submit -->
     <button type="submit" class="btn btn-success w-100">Register</button>
 
-    <!-- Display error messages if any (server-side) -->
+    <!-- Display server-side error messages -->
     {% if error %}
-    <div class="alert alert-danger text-center">{{ error }}</div>
+        <div class="alert alert-danger text-center">{{ error }}</div>
     {% endif %}
 </form>
 
@@ -50,4 +53,28 @@
 
 <!-- Attach JS -->
 <script src="{% static 'js/register.js' %}"></script>
+
+<!-- Inline CSS for password toggle -->
+<style>
+    .position-relative {
+        position: relative;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #007bff;
+        font-size: 0.9rem;
+        user-select: none;
+        z-index: 5; /* ensure the span is above the input */
+    }
+
+    .pr-5 {
+        padding-right: 50px; /* space for Show/Hide inside input */
+    }
+</style>
+
 {% endblock %}

@@ -1,22 +1,26 @@
 {% extends 'base_auth.html' %}
 {% load static %}
 
-
 {% block title %}Login{% endblock %}
 
 {% block content %}
 <h4 class="text-center mb-3">Login</h4>
 
-<form method="POST">
+<form method="POST" id="loginForm">
     {% csrf_token %}
     <div class="mb-3">
         <label for="email" class="form-label">Email</label>
         <input type="text" name="email" class="form-control" required>
+        <div id="emailError" class="text-danger mt-1"></div>
     </div>
-    <div class="mb-3">
+
+    <!-- Password with toggle -->
+    <div class="mb-3 position-relative">
         <label for="password" class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" required>
+        <input type="password" name="password" id="password" class="form-control pr-5" required>
+        <span id="togglePasswordText" class="password-toggle">Show</span>
     </div>
+
     <button type="submit" class="btn btn-primary w-100">Login</button>
 </form>
 
@@ -31,6 +35,27 @@
     <a href="{% url 'register' %}">Create an account</a> |
     <a href="{% url 'reset_password' %}">Forgot password?</a>
 </div>
-{% endblock %}
+
+<!-- Inline CSS for password toggle -->
+<style>
+    .position-relative {
+        position: relative;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #007bff;
+        font-size: 0.9rem;
+        user-select: none;
+        z-index: 5;
+    }
+    .pr-5 {
+        padding-right: 50px; /* space for Show/Hide */
+    }
+</style>
 
 <script src="{% static 'js/login.js' %}"></script>
+{% endblock %}

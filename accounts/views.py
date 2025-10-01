@@ -2,7 +2,16 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.http import JsonResponse
 import re
+
+# For email activation
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.template.loader import render_to_string
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import EmailMessage
 
 
 def login_view(request):
@@ -19,7 +28,8 @@ def login_view(request):
 
         if user:
             login(request, user)
-            return redirect("home")  # redirect to dashboard/home
+            return redirect("boundary_mapping")
+
         else:
             return render(request, "login.html", {"error": "Invalid email or password."})
 
@@ -53,15 +63,43 @@ def register_view(request):
         if User.objects.filter(email=email).exists():
             return render(request, "register.html", {"error": "Email already registered. Please login or use another email."})
 
-        # 6. Create new user
+        # 6. Create new user (inactive for activation)
         user = User.objects.create_user(username=username, email=email, password=password1)
+        user.is_active = False  # deactivate until email confirmed
         user.save()
 
-        # 7. Redirect to login after success
-        messages.success(request, "Account created successfully. Please login.")
-        return redirect("login")
+        # 7. Send activation email
+        current_site = get_current_site(request)
+        mail_subject = 'Activate your account'
+        message = render_to_string('activation_email.html', {
+            'user': user,
+            'domain': current_site.domain,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': default_token_generator.make_token(user),
+        })
+        email_message = EmailMessage(mail_subject, message, to=[email])
+        email_message.send()
+
+        # 8. Inform user to check email
+        return render(request, "registration_pending.html", {"email": email})
 
     return render(request, "register.html")
+
+
+def activate_view(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)  # optional: log them in immediately
+        return render(request, "activation_success.html")
+    else:
+        return render(request, "activation_invalid.html")
 
 
 def logout_view(request):
@@ -105,7 +143,8 @@ def set_new_password_view(request):
 
     return render(request, "set_new_password.html")
 
+
 def check_email_view(request):
-        email = request.GET.get("email", "")
-        exists = User.objects.filter(email=email).exists()
-        return JsonResponse({"exists": exists})
+    email = request.GET.get("email", "")
+    exists = User.objects.filter(email=email).exists()
+    return JsonResponse({"exists": exists})

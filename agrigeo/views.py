@@ -34,12 +34,14 @@ except Exception as e:
 ee.Initialize(project="ee-collinsmwiti98")
 
 
+
 # -------------------------
 # Page Views
 # -------------------------
-@login_required
+
 def home(request):
-    return render(request, 'home.html')
+    return render(request, 'home.html')   # Public landing page
+
 
 @login_required
 def boundary_mapping(request):

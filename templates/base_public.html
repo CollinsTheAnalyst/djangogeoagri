@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GeoAgri{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/public.css' %}">
+</head>
+<body>
+
+  <!-- Header / Navbar -->
+<header class="navbar navbar-expand-lg shadow custom-navbar">
+  <div class="container">
+    <a class="navbar-brand fw-bold fs-3" href="/">🌱 LUMIGOLD</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link px-3" href="{% url 'login' %}">Login / Register</a></li>
+        <li class="nav-item"><a class="nav-link px-3" href="/blog/">Blog</a></li>
+        <li class="nav-item"><a class="nav-link px-3" href="/contact/">Contact Us</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+  <!-- Main Content -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+<footer class="footer">
+  <div class="container py-5">
+    <div class="row text-white justify-content-between">
+
+      <!-- About Section -->
+      <div class="col-md-4 mb-4">
+        <h5 class="fw-bold">About GeoAgri</h5>
+        <p>Empowering farmers with data-driven solutions 🌱. Get insights, tools, and resources to maximize your farm’s potential.</p>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="col-md-3 mb-4">
+        <h5 class="fw-bold">Quick Links</h5>
+        <ul class="list-unstyled">
+          <li><a href="/" class="footer-link">Home</a></li>
+          <li><a href="{% url 'login' %}" class="footer-link">Login / Register</a></li>
+          <li><a href="/blog/" class="footer-link">Blog</a></li>
+          <li><a href="/contact/" class="footer-link">Contact Us</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact / Socials -->
+      <div class="col-md-3 mb-4">
+        <h5 class="fw-bold">Connect With Us</h5>
+        <p>Email: info@geoagri.com</p>
+        <p>Phone: +254 700 000 000</p>
+        <div class="social-links mt-2">
+          <a href="#" class="social-icon">🌐</a>
+          <a href="#" class="social-icon">🐦</a>
+          <a href="#" class="social-icon">📘</a>
+        </div>
+      </div>
+
+    </div>
+    <hr class="footer-divider">
+    <div class="text-center mt-3 small">
+      &copy; {{ now|date:"Y" }} GeoAgri. All Rights Reserved.
+    </div>
+  </div>
+</footer>
+
+

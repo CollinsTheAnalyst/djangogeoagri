@@ -8,4 +8,7 @@ urlpatterns = [
     path('reset-password/', views.reset_password_view, name='reset_password'),
     path('set-new-password/', views.set_new_password_view, name='set_new_password'),
     path("check-email/", views.check_email_view, name="check_email"),
+    
+    # Activation link
+    path('activate/<uidb64>/<token>/', views.activate_view, name='activate'),
 ]

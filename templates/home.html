@@ -1,7 +1,56 @@
-{% extends "base.html" %}
-{% block title %}home{% endblock %}
+{% extends "base_public.html" %}
+{% load static %}
+{% block title %}GeoAgri Home{% endblock %}
 
 {% block content %}
 
+<!-- Hero Section -->
+<section class="hero text-center text-white">
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold mb-3">Empowering Farmers with Data</h1>
+        <p class="lead mb-4">Get insights, tools, and resources to maximize your farm’s potential 🌱</p>
+        <a href="{% url 'login' %}" class="btn btn-lg btn-warning fw-bold px-4 py-2 shadow">
+            Get Started
+        </a>
+    </div>
+</section>
+
+<!-- Features / About Section -->
+<section class="features py-5">
+    <div class="container">
+        <!-- Feature 1 -->
+        <div class="row g-5 align-items-center mb-5">
+            <div class="col-md-6">
+                <img src="{% static 'images/Fieldsizeandboundary.png' %}" alt="Farm Mapping & Boundaries" class="img-fluid rounded shadow">
+            </div>
+            <div class="col-md-6">
+                <h2 class="fw-bold text-white">Farm Mapping & Boundaries</h2>
+                <p class="text-light">Easily map your farm boundaries, monitor crop health with NDVI, and make informed decisions based on precise spatial data.</p>
+            </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="row g-5 align-items-center mb-5">
+            <div class="col-md-6 order-md-2">
+                <img src="{% static 'images/soilnutrients.jpg' %}" alt="Soil Fertility & Recommendations" class="img-fluid rounded shadow">
+            </div>
+            <div class="col-md-6 order-md-1">
+                <h2 class="fw-bold text-white">Soil Fertility & Recommendations</h2>
+                <p class="text-light">Get detailed soil analysis and fertilizer recommendations tailored to your crops, ensuring optimal growth and yield.</p>
+            </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="row g-5 align-items-center mb-5">
+            <div class="col-md-6">
+                <img src="{% static 'images/home_page(1).jpeg' %}" alt="Plant Disease Detection" class="img-fluid rounded shadow">
+            </div>
+            <div class="col-md-6">
+                <h2 class="fw-bold text-white">Plant Disease Detection</h2>
+                <p class="text-light">Identify crop diseases early with our AI-driven detection tools and take timely actions to protect your farm.</p>
+            </div>
+        </div>
+    </div>
+</section>
 
 {% endblock %}
