@@ -5,20 +5,16 @@ gunicorn>=23.0,<24
 whitenoise>=6.11,<7
 sqlparse>=0.5.3,<0.6
 
-# Django GIS & mapping
+# Django GIS & mapping (keep minimal)
 django-geojson>=4.2,<5
 django-leaflet>=0.32,<1
-folium>=0.20,<0.21
-branca>=0.8,<0.9
 geocoder>=1.38,<2
 
-# Google Earth Engine
+# Google Earth Engine (optional, only if used)
 earthengine-api>=1.6.9,<2
-geemap>=0.36,<0.37
 google-api-python-client>=2.182,<3
 google-auth>=2.40,<3
 google-cloud-storage>=3.4,<4
-google-resumable-media>=2.7,<3
 grpcio>=1.75,<2
 
 # Data & computation
@@ -28,10 +24,8 @@ scipy>=1.15,<1.16
 matplotlib>=3.10,<3.11
 python-dateutil>=2.9,<3
 pytz>=2025.2,<2026
-
-# TensorFlow (optional if used for ML)
-tensorflow>=2.12,<2.13
-tensorflow-estimator>=2.12,<2.13
+packaging>=25.0,<26
+click>=8.3,<9
 
 # Database
 psycopg2-binary>=2.9,<3
@@ -39,5 +33,7 @@ psycopg2-binary>=2.9,<3
 # Utilities
 requests>=2.32,<3
 python-decouple>=3.8,<4
-packaging>=25.0,<26
-click>=8.3,<9
+
+# Optional for TensorFlow/ML (commented out if not needed)
+# tensorflow>=2.12,<2.13
+# tensorflow-estimator>=2.12,<2.13
