@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
+
 {% block title %}NDVI Explorer{% endblock %}
 
 {% block content %}
@@ -16,6 +17,7 @@
     <div id="chart-panel" class="card shadow-sm">
         <h5 class="card-title">NDVI/EVI Time Series</h5>
         <canvas id="ndvi-chart"></canvas>
+
     </div>
 </div>
 
@@ -114,6 +116,8 @@
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+
 
 <!-- Leaflet -->
 <script src="{% static 'js/leaflet.js' %}"></script>

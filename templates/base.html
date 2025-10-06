@@ -1,4 +1,6 @@
 {% load static %}
+
+
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="auto">
 <head>
@@ -10,20 +12,137 @@
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
-
-    <!-- Leaflet CSS (now local) -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
 
-    {% block extra_css %}
-    <!-- Page-specific CSS can be added by child templates -->
-    {% endblock %}
+    {% block extra_css %}{% endblock %}
+
+    
+
+
+    <style>
+        /* ========================
+           Body Background
+        ======================== */
+        body {
+            background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+            min-height: 100vh;
+            position: relative;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("{% static 'images/restaurant.png' %}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: blur(3px);
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ========================
+           Navbar
+        ======================== */
+        .navbar {
+            background: rgba(0, 50, 0, 0.85);
+            backdrop-filter: blur(6px);
+        }
+        .navbar a.nav-link:hover {
+            text-decoration: underline;
+            color: #b0e57c;
+        }
+
+        /* ========================
+           Sidebar
+        ======================== */
+        .sidebar {
+            background-color: #f7f9f7;
+            min-height: 100vh;
+            padding-top: 20px;
+            border-right: 1px solid #e0e0e0;
+        }
+        .sidebar a {
+            display: block;
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            transition: all 0.2s ease-in-out;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #b0e57c;
+            color: #fff;
+        }
+        .sidebar a.active {
+            background-color: #60c844;
+            color: #fff;
+            font-weight: bold;
+        }
+        .sidebar .sidebar-heading {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            color: #555;
+            letter-spacing: 1px;
+        }
+
+        /* Collapsible groups */
+        .sidebar .collapse-inner a {
+            padding-left: 40px;
+            font-size: 0.95rem;
+        }
+
+        /* ========================
+           Main Content
+        ======================== */
+        main {
+            background-color: #ffffffcc;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* ========================
+           Footer
+        ======================== */
+        footer {
+            background-color: #1a1a1a;
+            color: #fff;
+            padding: 15px 0;
+        }
+
+        /* ========================
+           Utility / Buttons
+        ======================== */
+        .btn-primary-custom {
+            background-color: #60c844;
+            border-color: #60c844;
+            color: #fff;
+            font-weight: 500;
+        }
+        .btn-primary-custom:hover {
+            background-color: #4caf33;
+            border-color: #4caf33;
+            color: #fff;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
     <!-- Navbar -->
-    <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+    <header class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow">
         <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">GeoAgri</a>
-        
         <div class="navbar-nav ms-auto px-3">
             {% if user.is_authenticated %}
                 <span class="navbar-text text-white me-3">
@@ -43,21 +162,22 @@
 
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                {% block content %}
-                <!-- Page-specific content goes here -->
-                {% endblock %}
+                {% block content %}{% endblock %}
             </main>
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle (includes Popper) -->
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <!-- Footer -->
+    <footer class="text-center mt-auto">
+        &copy; 2025 GeoAgri. All rights reserved.
+    </footer>
 
-    <!-- Leaflet JS (now local) -->
+    <!-- JS -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/leaflet.js' %}"></script>
 
-    {% block extra_js %}
-    <!-- Page-specific JS (maps, etc.) can be added by child templates -->
-    {% endblock %}
+    {% block extra_js %}{% endblock %}
+    
+
 </body>
 </html>

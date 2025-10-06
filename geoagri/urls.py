@@ -20,7 +20,7 @@ from django.urls import path, include
 urlpatterns = [
     path('', include('agrigeo.urls')),       # main app routes
     path('accounts/', include('accounts.urls')),  # authentication routes
+    path("django_plotly_dash/", include("django_plotly_dash.urls")),
     path('admin/', admin.site.urls),         # Django admin
+
 ]
-
-

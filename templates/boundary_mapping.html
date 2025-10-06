@@ -7,18 +7,38 @@
 <h1>Boundary Mapping</h1>
 <p>Enter your farm name, search for the location, then draw your farm boundaries.</p>
 
-<!-- Farm Name Input -->
-<div style="margin-bottom: 10px;">
-    <label for="farm-name">Farm Name:</label>
-    <input type="text" id="farm-name" placeholder="Enter farm name" style="width: 150px; padding: 4px;">
-</div>
+<!-- ===== Farm Registration Form ===== -->
+<form id="farm-form" method="POST" action="{% url 'save_farm_boundary' %}">
+    {% csrf_token %}
 
+    <!-- Horizontally aligned inputs -->
+    <div class="d-flex mb-3 gap-2">
+        <div class="flex-grow-1">
+            <label for="farm-name" class="form-label">Farm Name <span style="color:red">*</span></label>
+            <input type="text" id="farm-name" name="farm_name" class="form-control" placeholder="Enter farm name" required>
+        </div>
 
-<!-- Map Container -->
-<div id="map" style="height: 700px; margin-bottom: 20px;"></div>
+        <div class="flex-grow-1">
+            <label for="farm-location" class="form-label">Location / Address <span style="color:red">*</span></label>
+            <input type="text" id="location-search" name="location" class="form-control" placeholder="Enter farm location" required>
+        </div>
 
-<!-- Area Info -->
-<div id="area-info"></div>
+        <button type="button" id="search-btn" class="btn btn-outline-success align-self-end">Search</button>
+    </div>
+
+    <!-- Hidden fields for polygon & area -->
+    <input type="hidden" id="farm-boundary" name="boundary">
+    <input type="hidden" id="farm-area" name="area">
+
+    <!-- Map -->
+    <div id="map" style="height: 600px; margin-bottom: 40px;"></div>
+
+    <!-- Area Info -->
+    <div id="area-info" class="mb-3"></div>
+
+    <button type="submit" class="btn btn-success">Save Farm</button>
+</form>
+
 {% endblock %}
 
 {% block extra_css %}
@@ -38,6 +58,5 @@
 
 <!-- Custom JS -->
 <script src="{% static 'js/boundary_mapping.js' %}"></script>
-
 
 {% endblock %}

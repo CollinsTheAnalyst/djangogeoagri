@@ -17,6 +17,7 @@ soil_code_guide = {
     "Bh": "Humic Cambisols",
     "Bv": "Vertic Cambisols",
     "Bz": "Calcic Cambisols",
+    "Bk": "Calcic Cambisols",
 
     "E": "RENDZINAS",
 
@@ -99,7 +100,7 @@ soil_code_guide = {
     "Qp": "Plinthic Arenosols",
 
     "R": "REGOSOLS",
-    "Rc": "Calcari Regosols",
+    "Rc": "Calcaric Regosols",
     "Rd": "Dystric Regosols",
     "Re": "Eutric Regosols",
     "Rx": "Gelic Regosols",
@@ -132,6 +133,7 @@ soil_code_guide = {
     "Xk": "Calcic Xerosols",
 
     "Y": "YERMOSOLS",
+    "Yh":"Haplic Yermosols",
     "Yg": "Gypsic Yermosols",
     "Ym": "Mollic Yermosols",
     "Yk": "Calcic Yermosols",
@@ -146,7 +148,7 @@ soil_code_guide = {
     "Zk": "Taxiyic Solonchaks",
 
     # Other land types
-    "WA": "Water Bodies",
+    "WR": "Water Bodies",
     "GL": "Glaciers",
     "ST": "Salt flats",
     "RK": "Rock debris",

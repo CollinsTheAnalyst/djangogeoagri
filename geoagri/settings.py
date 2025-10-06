@@ -51,7 +51,12 @@ INSTALLED_APPS = [
     'leaflet',
     'agrigeo',
     'accounts',
+    "django_plotly_dash.apps.DjangoPlotlyDashConfig",
+    "dpd_static_support",  # static files for dash
+    "channels",
 ]
+
+
 
 
 MIDDLEWARE = [
@@ -63,6 +68,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django_plotly_dash.middleware.BaseMiddleware",
+    "django_plotly_dash.middleware.ExternalRedirectionMiddleware",
 ]
 
 ROOT_URLCONF = 'geoagri.urls'
@@ -83,6 +90,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'geoagri.wsgi.application'
+ASGI_APPLICATION = "geoagri.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
+
 
 
 # Database
@@ -168,13 +183,11 @@ LEAFLET_CONFIG = {
     'MAX_ZOOM': 18,
     'TILES': 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 }
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
 EMAIL_PORT = config("EMAIL_PORT", cast=int, default=587)
 EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=True)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
-
-
-
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")

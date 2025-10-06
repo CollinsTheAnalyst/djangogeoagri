@@ -1,81 +1,156 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+# views.py
+
+import json
+import os
+import numpy as np
+import pandas as pd
+import requests
+from io import BytesIO
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.templatetags.static import static
+from django.conf import settings
+
 from django.contrib.gis.geos import GEOSGeometry
-from .models import FarmBoundary
+
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+
+import ee
+
+from .models import FarmBoundary, Crop, FertilizerStageMapping
 from .soil_summaries import soil_summaries
 from .legend import soil_code_guide
-import json
-import ee
-import pandas as pd
-import io
-import numpy as np
-from django.core.files.uploadedfile import InMemoryUploadedFile
-from tensorflow.keras.preprocessing import image
-import os
-from django.conf import settings
-from tensorflow.keras.models import load_model
-from .models import Crop
 
+
+# ===========================
+# Initialize External Services
+# ===========================
+# Initialize Google Earth Engine
+try:
+    ee.Initialize(project="ee-collinsmwiti98")
+except Exception as e:
+    print("❌ Error initializing Earth Engine:", e)
+
+
+# Load Plant Disease Model
 MODEL_PATH = os.path.join(settings.BASE_DIR, "agrigeo", "potatoes.h5")
-
 try:
     MODEL = load_model(MODEL_PATH, compile=False)
-    print("MODEL:", MODEL)
-
-    
+    print("✅ Plant disease model loaded")
 except Exception as e:
     MODEL = None
-    print("❌ Error loading model:", e)
+    print("❌ Error loading plant disease model:", e)
 
 
-# Initialize Google Earth Engine
-ee.Initialize(project="ee-collinsmwiti98")
-
-
-
-# -------------------------
-# Page Views
-# -------------------------
-
+# ===========================
+# Public Views
+# ===========================
 def home(request):
-    return render(request, 'home.html')   # Public landing page
+    """Public landing page"""
+    return render(request, 'home.html')
 
 
+# ===========================
+# Authenticated Page Views
+# ===========================
 @login_required
 def boundary_mapping(request):
     return render(request, 'boundary_mapping.html')
 
+
 @login_required
 def fertilizer_recommendation(request):
-    crops = Crop.objects.all().order_by("name")  # fetch all crops
-    return render(request, 'fertilizer_recommendation.html', {"crops": crops})
+    crops = Crop.objects.all().order_by("name")
+    stages = [stage[0] for stage in FertilizerStageMapping.STAGE_CHOICES]
+
+    # Map fertilizers to each stage
+    stage_fertilizers = {}
+    for stage in stages:
+        ferts = FertilizerStageMapping.objects.filter(stage_name=stage).select_related('fertilizer')
+        stage_fertilizers[stage] = [
+            {
+                "id": f.fertilizer.id,
+                "name": f.fertilizer.name,
+                "n_percent": f.fertilizer.n_percent,
+                "p_percent": f.fertilizer.p_percent,
+                "k_percent": f.fertilizer.k_percent,
+            }
+            for f in ferts
+        ]
+
+    context = {
+        "crops": crops,
+        "stages": stages,
+        "stage_fertilizers": stage_fertilizers
+    }
+    return render(request, "fertilizer_recommendation.html", context)
 
 
 @login_required
 def ndvi_explorer(request):
     return render(request, 'ndvi_explorer.html')
 
+
 @login_required
 def plant_disease(request):
     return render(request, 'plant_disease.html')
+
 
 @login_required
 def soil_nutrients(request):
     return render(request, 'soil_nutrients.html')
 
+
 @login_required
 def soil_taxonomic_groups(request):
-    return render(request, 'soil_taxonomy.html')
+    context = {"SOIL_REPORTS": SOIL_REPORTS}
+    return render(request, "soil_taxonomy.html", context)
 
 
-# -------------------------
+# ===========================
 # Farm Boundary Endpoints
-# -------------------------
+# ===========================
+@login_required
+def save_farm_boundary(request):
+    """Save farm boundary from form submission"""
+    if request.method == "POST":
+        farm_name = request.POST.get("farm_name")
+        location = request.POST.get("location")
+        boundary = request.POST.get("boundary")
+        area = request.POST.get("area")
+
+        if not all([farm_name, location, boundary, area]):
+            messages.error(request, "All fields are required.")
+            return redirect('boundary_mapping')
+
+        try:
+            geom = GEOSGeometry(json.dumps(json.loads(boundary)["geometry"]))
+            FarmBoundary.objects.create(
+                owner=request.user,
+                name=farm_name,
+                location=location,
+                boundary=geom,
+                area=float(area)
+            )
+            messages.success(request, "Farm boundary saved successfully.")
+        except Exception as e:
+            messages.error(request, f"Error saving boundary: {e}")
+
+        return redirect('boundary_mapping')
+    else:
+        return redirect('boundary_mapping')
+
+
 @login_required
 @csrf_exempt
 def save_boundary(request):
+    """Save farm boundary via AJAX / JSON"""
     if request.method != "POST":
         return JsonResponse({"status": "failed", "error": "POST request required"}, status=400)
     try:
@@ -90,9 +165,9 @@ def save_boundary(request):
         return JsonResponse({"status": "failed", "error": str(e)}, status=400)
 
 
-# -------------------------
-# Counties / Geometry
-# -------------------------
+# ===========================
+# Counties & Geometry
+# ===========================
 @login_required
 def get_counties(request):
     try:
@@ -119,9 +194,9 @@ def get_county_geometry(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# -------------------------
+# ===========================
 # NDVI / Time Series
-# -------------------------
+# ===========================
 @login_required
 @csrf_exempt
 def point_time_series(request):
@@ -160,9 +235,9 @@ def point_time_series(request):
         return JsonResponse({"status": "failed", "error": str(e)}, status=500)
 
 
-# -------------------------
+# ===========================
 # Soil Nutrients
-# -------------------------
+# ===========================
 @login_required
 @csrf_exempt
 def get_soil_data(request):
@@ -216,14 +291,11 @@ def get_soil_data(request):
         return JsonResponse({"error": str(e)}, status=400)
 
 
-# -------------------------
+# ===========================
 # Soil Taxonomy Endpoints
-# -------------------------
+# ===========================
 @login_required
 def get_county_soils_with_names(request):
-    """
-    Returns soil codes and readable names for a county.
-    """
     county_name = request.GET.get("county")
     if not county_name:
         return JsonResponse({"error": "County name not provided"}, status=400)
@@ -249,9 +321,6 @@ def get_county_soils_with_names(request):
 @login_required
 @csrf_exempt
 def get_soil_at_point(request):
-    """
-    Returns soil code, name, and summary at a clicked point.
-    """
     if request.method != "POST":
         return JsonResponse({"error": "POST request required"}, status=400)
     try:
@@ -282,94 +351,81 @@ def get_soil_at_point(request):
 
 @login_required
 def get_clipped_soils(request):
-    """
-    Returns a county-clipped soil GeoJSON with DOMSOI property for Leaflet.
-    """
     county_name = request.GET.get("county")
     if not county_name:
         return JsonResponse({"error": "County name not provided"}, status=400)
-    
+
     try:
         kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
         kenya_soils = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/kenyasoils_styled")
-        
         county_fc = kenya_counties.filter(ee.Filter.eq("COUNTY", county_name))
-        county_soils = kenya_soils.filterBounds(county_fc).select(['DOMSOI', 'fillColor', 'fillOpacity', 'strokeColor', 'strokeWidth'])
+        county_soils = kenya_soils.filterBounds(county_fc).select(
+            ['DOMSOI', 'fillColor', 'fillOpacity', 'strokeColor', 'strokeWidth']
+        )
 
-        # Get features
         features = county_soils.getInfo()['features']
-        geojson = {
-            "type": "FeatureCollection",
-            "features": [
-                {
-                    "type": "Feature",
-                    "geometry": f['geometry'],
-                    "properties": {
-                        "DOMSOI": f['properties'].get('DOMSOI'),
-                        "fillColor": f['properties'].get('fillColor', '#cccccc'),
-                        "fillOpacity": f['properties'].get('fillOpacity', 0.7),
-                        "strokeColor": f['properties'].get('strokeColor', '#000000'),
-                        "strokeWidth": f['properties'].get('strokeWidth', 1),
-                    }
-                } for f in features
-            ]
-        }
+
+        geojson = {"type": "FeatureCollection", "features": []}
+        for f in features:
+            soil_code = f['properties'].get('DOMSOI')
+            soil_name = soil_code_guide.get(soil_code, "Unknown Soil")
+            geojson["features"].append({
+                "type": "Feature",
+                "geometry": f['geometry'],
+                "properties": {
+                    "DOMSOI": soil_code,
+                    "Soil_Name": soil_name,
+                    "fillColor": f['properties'].get('fillColor', '#cccccc'),
+                    "fillOpacity": f['properties'].get('fillOpacity', 0.7),
+                    "strokeColor": f['properties'].get('strokeColor', '#000000'),
+                    "strokeWidth": f['properties'].get('strokeWidth', 1),
+                }
+            })
 
         return JsonResponse(geojson, safe=False)
-    
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
-## Plant disease
 
+
+# ===========================
+# Plant Disease Prediction
+# ===========================
 @csrf_exempt
 def predict_view(request):
-    print("=== predict_view called ===")
-    print("Request method:", request.method)
-    print("FILES:", request.FILES)
-    print("POST data:", request.POST)
-    
-    if request.method == "POST":
-        file: InMemoryUploadedFile = request.FILES.get("file")
-        crop = request.POST.get("crop")
-        print("Received file:", file)
-        print("Received crop:", crop)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=405)
 
-        if not file:
-            return JsonResponse({"error": "No file uploaded"}, status=400)
+    file: InMemoryUploadedFile = request.FILES.get("file")
+    crop = request.POST.get("crop")
+    if not file:
+        return JsonResponse({"error": "No file uploaded"}, status=400)
 
-        try:
-            # Read the image file into PIL
-            img = image.load_img(file, target_size=(224, 224))  # resize to match model input
-            img_array = image.img_to_array(img)
-            img_array = np.expand_dims(img_array, axis=0) / 255.0  # normalize
+    try:
+        img = image.load_img(file, target_size=(224, 224))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-            # Run prediction
-            preds = MODEL.predict(img_array)
-            predicted_class = int(np.argmax(preds[0]))
-            confidence = float(np.max(preds[0]))
+        preds = MODEL.predict(img_array)
+        predicted_class = int(np.argmax(preds[0]))
+        confidence = float(np.max(preds[0]))
 
-            # Dummy mapping (replace with your actual class labels)
-            class_labels = ["Healthy", "Disease A", "Disease B"]
-            disease = class_labels[predicted_class] if predicted_class < len(class_labels) else "Unknown"
+        # TODO: Replace with actual model class labels
+        class_labels = ["Healthy", "Disease A", "Disease B"]
+        disease = class_labels[predicted_class] if predicted_class < len(class_labels) else "Unknown"
 
-            # Example response
-            return JsonResponse({
-                "prediction": disease,
-                "confidence": confidence,
-                "stage": "Early",   # placeholder, can refine later
-                "treatment": "Apply recommended fungicide",  # placeholder
-            })
-        except Exception as e:
-            print("Prediction error:", e)
-            return JsonResponse({"error": str(e)}, status=500)
-
-    return JsonResponse({"error": "Invalid request"}, status=405)
+        return JsonResponse({
+            "prediction": disease,
+            "confidence": confidence,
+            "stage": "Early",
+            "treatment": "Apply recommended fungicide",
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
-
-# -------------------------
-# Fertilizer Recommendation page
+# ===========================
+# Fertilizer Recommendation API
+# ===========================
 @login_required
 def get_crop_recommendation(request, crop_id):
     try:
@@ -385,6 +441,89 @@ def get_crop_recommendation(request, crop_id):
         return JsonResponse(data)
     except Crop.DoesNotExist:
         return JsonResponse({"error": "Crop not found"}, status=404)
+
+
+# ===========================
+# Reverse Geocoding
+# ===========================
+@csrf_exempt
+def reverse_geocode(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=405)
+    try:
+        body = json.loads(request.body)
+        lat = body.get("lat")
+        lng = body.get("lng")
+        if not all([lat, lng]):
+            return JsonResponse({"error": "Missing lat/lng"}, status=400)
+
+        url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lng}"
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        data = response.json()
+        address = data.get("display_name", "")
+        return JsonResponse({"address": address})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+# ===========================
+# Soil Reports Mapping
+# ===========================
+# Map soil names to PDF report files
+SOIL_REPORTS = {
+    "Chromic vertisols": "Chromic vertisols.pdf",
+    "Dystric Cambisols": "Dystric Cambisols.pdf",
+    "Dystric Nitisols": "Dystric Nitisols.pdf",
+    "Eutric Cambisols": "Eutric Cambisols.pdf",
+    "Eutric Nitisols": "Eutric Nitisols.pdf",
+    "Eutric Planosols": "Eutric Planosols.pdf",
+    "Eutric Regosols": "Eutric Regosols.pdf",
+    "Ferralic Planosols": "Ferralic Planosols.pdf",
+    "Ferric Acrisols": "Ferric Acrisols.pdf",
+    "Ferric Lithosols": "Ferric Lithosols.pdf",
+    "Ferric Arenosols": "FerricArenosols.pdf",
+    "Gleyic Lithosols": "Gleyic Lithosols.pdf",
+    "GLEYSOLS": "GLEYSOLS.pdf",
+    "Haplic Chernozems": "Haplic Chernozems.pdf",
+    "Humic Cambisols": "Humic Cambisols.pdf",
+    "Humic Nitisols": "Humic Nitisols.pdf",
+    "Humic Planosols": "Humic Planosols.pdf",
+    "Lithosols": "Lithosols.pdf",
+    "Luvic Arenosols": "LuvicArenosols.pdf",
+    "Mollic Andosols": "Mollic Andosols.pdf",
+    "Mollic Gleysols": "Mollic Gleysols.pdf",
+    "Orthic Andosols": "Orthic Andosols.pdf",
+    "Orthic Ferralsols": "Orthic Ferralsols.pdf",
+    "Orthic Solonchanks": "Orthic Solonchanks.pdf",
+    "Pellic Vertisols": "Pellic Vertisols.pdf",
+    "Plinthic Ferralsols": "plinthic Ferralsols.pdf",
+}
+
+
+@login_required
+def soil_summary(request, soil_name):
+    """
+    Render a page showing the soil report PDF and optional summary.
+    """
+    pdf_file = SOIL_REPORTS.get(soil_name)
+    pdf_url = static(f'reports/{pdf_file}') if pdf_file else None
+
+    # Optional: you can include textual summary from soil_summaries.py
+    summary_text = soil_summaries.get(soil_name, "")
+
+    context = {
+        "soil_name": soil_name,
+        "pdf_url": pdf_url,
+        "summary": summary_text,
+    }
+    return render(request, "soil_summary.html", context)
+
+
+
+
+
+
+
 
 
     
