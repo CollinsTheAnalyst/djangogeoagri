@@ -23,6 +23,8 @@ urlpatterns = [
     path('get-soil-at-point/', views.get_soil_at_point, name='get_soil_at_point'),
     path('get-clipped-soils/', views.get_clipped_soils, name='get_clipped_soils'),
     path('reverse-geocode/', views.reverse_geocode, name='reverse_geocode'),
+    path('soilreport/<str:soil_code>/download/', views.download_soil_report, name='download_soil_report'),
+
 
 
     # Plant disease

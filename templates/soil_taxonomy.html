@@ -136,15 +136,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-{{ SOIL_REPORTS|json_script:"soilReportsData" }}
 
-<script>
-    const SOIL_REPORTS = JSON.parse(document.getElementById("soilReportsData").textContent);
-    console.log(SOIL_REPORTS); // check if loaded correctly
-</script>
-
-
-
-<!-- Soil Explorer logic -->
+<!-- Main logic -->
 <script src="{% static 'js/soiltaxonomy.js' %}"></script>
 {% endblock %}
+

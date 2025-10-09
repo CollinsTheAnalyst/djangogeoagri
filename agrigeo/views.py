@@ -27,6 +27,50 @@ from .models import FarmBoundary, Crop, FertilizerStageMapping
 from .soil_summaries import soil_summaries
 from .legend import soil_code_guide
 
+from django.http import FileResponse, Http404
+
+
+# ===========================
+# Soil Reports Mapping (Global)
+# ===========================
+SOIL_REPORTS = {
+    "Fr": "Acric Ferralsols.pdf",
+    "Af": "Ferric Acrisols.pdf",
+    "Vc": "Chromic Vertisols.pdf",
+    "Vp": "Pellic Vertisols.pdf",
+    "Bd": "Dystric Cambisols.pdf",
+    "Ne": "Eutric Nitisols.pdf",
+    "Nh": "Humic Nitisols.pdf",
+    "Nd": "Dystric Nitisols.pdf",
+    "Be": "Eutric Cambisols.pdf",
+    "We": "Eutric Planosols.pdf",
+    "Wf": "Ferralic Planosols.pdf",
+    "Fo": "Orthic Ferralsols.pdf",
+    "Fp": "plinthic Ferralsols.pdf",
+    "Lf": "Ferric Lithosols.pdf",
+    "Qf": "FerricArenosols.pdf",
+    "Lg": "Gleyic Lithosols.pdf", 
+    "Gh": "Haplic Chernozems.pdf",
+    "Bh": "Humic Cambisols.pdf",
+    "Wh": "Humic Planosols.pdf",
+    "Ql": "LuvicArenosols.pdf",
+    "Tm": "Mollic Andosols.pdf",
+    "Gm": "Mollic Gleysols.pdf",
+    "To": "Orthic Andosols.pdf",
+    "Of": "Orthic Ferralsols.pdf",
+    "Zo": "Orthic Solonchanks.pdf",
+    "Fp": "plinthic Ferralsols.pdf",
+    "Re": "Eutric Regosols.pdf",
+    "G":  "GLEYSOLS.pdf",
+    "I":  "Lithosols.pdf",
+    "Jc": "Calcaric Fluviosols.pdf",
+    "Rc": "Calcaric Regosols.pdf",
+    "Xk": "Calcic Xerosols.pdf",
+    "Yk": "Calcic Yermosols.pdf",
+    "X": "XEROSOLS.pdf",
+    "Yh":"Haplic Yermosols.pdf",
+}
+
 
 # ===========================
 # Initialize External Services
@@ -111,6 +155,7 @@ def soil_nutrients(request):
 def soil_taxonomic_groups(request):
     context = {"SOIL_REPORTS": SOIL_REPORTS}
     return render(request, "soil_taxonomy.html", context)
+
 
 
 # ===========================
@@ -470,34 +515,21 @@ def reverse_geocode(request):
 # Soil Reports Mapping
 # ===========================
 # Map soil names to PDF report files
-SOIL_REPORTS = {
-    "Chromic vertisols": "Chromic vertisols.pdf",
-    "Dystric Cambisols": "Dystric Cambisols.pdf",
-    "Dystric Nitisols": "Dystric Nitisols.pdf",
-    "Eutric Cambisols": "Eutric Cambisols.pdf",
-    "Eutric Nitisols": "Eutric Nitisols.pdf",
-    "Eutric Planosols": "Eutric Planosols.pdf",
-    "Eutric Regosols": "Eutric Regosols.pdf",
-    "Ferralic Planosols": "Ferralic Planosols.pdf",
-    "Ferric Acrisols": "Ferric Acrisols.pdf",
-    "Ferric Lithosols": "Ferric Lithosols.pdf",
-    "Ferric Arenosols": "FerricArenosols.pdf",
-    "Gleyic Lithosols": "Gleyic Lithosols.pdf",
-    "GLEYSOLS": "GLEYSOLS.pdf",
-    "Haplic Chernozems": "Haplic Chernozems.pdf",
-    "Humic Cambisols": "Humic Cambisols.pdf",
-    "Humic Nitisols": "Humic Nitisols.pdf",
-    "Humic Planosols": "Humic Planosols.pdf",
-    "Lithosols": "Lithosols.pdf",
-    "Luvic Arenosols": "LuvicArenosols.pdf",
-    "Mollic Andosols": "Mollic Andosols.pdf",
-    "Mollic Gleysols": "Mollic Gleysols.pdf",
-    "Orthic Andosols": "Orthic Andosols.pdf",
-    "Orthic Ferralsols": "Orthic Ferralsols.pdf",
-    "Orthic Solonchanks": "Orthic Solonchanks.pdf",
-    "Pellic Vertisols": "Pellic Vertisols.pdf",
-    "Plinthic Ferralsols": "plinthic Ferralsols.pdf",
-}
+
+
+def download_soil_report(request, soil_code):
+    if soil_code not in SOIL_REPORTS:
+        raise Http404("No report found for this soil type")
+
+    report_filename = SOIL_REPORTS[soil_code]
+    file_path = os.path.join(settings.BASE_DIR, "static", "reports", report_filename)
+
+    if not os.path.exists(file_path):
+        raise Http404("Report file not found on server")
+
+    return FileResponse(open(file_path, "rb"), as_attachment=True, filename=report_filename)
+
+
 
 
 @login_required
