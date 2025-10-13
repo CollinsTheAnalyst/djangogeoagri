@@ -36,11 +36,12 @@
 
             <!-- Optional Soil Test -->
             <h2 class="mt-4">Soil Test Results (Optional)</h2>
-            <input type="number" placeholder="Soil N (%)" step="0.01" class="form-control mb-2">
-            <input type="number" placeholder="Soil P (ppm)" class="form-control mb-2">
-            <input type="number" placeholder="Soil K (ppm)" class="form-control mb-2">
-            <input type="number" placeholder="Soil pH" step="0.1" class="form-control mb-2">
-            <input type="number" placeholder="Soil EC (dS/m)" step="0.01" class="form-control mb-2">
+            <input type="number" id="soilN" placeholder="Soil N (%)" step="0.01" class="form-control mb-2">
+            <input type="number" id="soilP" placeholder="Soil P (ppm)" class="form-control mb-2">
+            <input type="number" id="soilK" placeholder="Soil K (ppm)" class="form-control mb-2">
+            <input type="number" id="soilPH" placeholder="Soil pH" step="0.1" class="form-control mb-2">
+            <input type="number" id="soilEC" placeholder="Soil EC (dS/m)" step="0.01" class="form-control mb-2">
+
         </div>
 
         <!-- Right Column -->
@@ -64,7 +65,7 @@
             </table>
 
             <h2 class="mt-4">Fertilizer Application Stage</h2>
-            <div class="mb-3">
+            <div id="stageRadiosContainer" class="mb-3">
                 <input type="radio" name="stage" id="planting" value="Planting" checked>
                 <label for="planting">Planting</label>
                 &nbsp;&nbsp;
@@ -76,7 +77,6 @@
                 <input type="radio" name="stage" id="topdressing2" value="Top Dressing 2">
                 <label for="topdressing2">Top Dressing 2</label>
             </div>
-
 
 
             <select id="fertilizer" class="form-control mb-3">
@@ -187,6 +187,17 @@
     background-color: #242933;
 }
 </style>
+
+<!-- inject data safely as a global before loading your static JS -->
+<script>
+  try {
+      window.stageFertilizers = JSON.parse('{{ stage_fertilizers_json|escapejs }}') || {};
+  } catch (e) {
+      console.error("Error parsing stage_fertilizers_json:", e);
+      window.stageFertilizers = {};
+  }
+  console.log("✅ Stage fertilizers loaded:", window.stageFertilizers);
+</script>
 
 <script src="{% static 'js/reccomendation.js' %}"></script>
 

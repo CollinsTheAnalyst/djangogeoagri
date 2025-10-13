@@ -16,6 +16,8 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.templatetags.static import static
 from django.conf import settings
 
+from django.core.serializers.json import DjangoJSONEncoder
+
 from django.contrib.gis.geos import GEOSGeometry
 
 from tensorflow.keras.models import load_model
@@ -28,6 +30,7 @@ from .soil_summaries import soil_summaries
 from .legend import soil_code_guide
 
 from django.http import FileResponse, Http404
+from .models import CropApplication, Crop
 
 
 # ===========================
@@ -128,11 +131,13 @@ def fertilizer_recommendation(request):
             for f in ferts
         ]
 
+    stage_fertilizers_json = json.dumps(stage_fertilizers, cls=DjangoJSONEncoder)
+
     context = {
-        "crops": crops,
-        "stages": stages,
-        "stage_fertilizers": stage_fertilizers
-    }
+    "crops": crops,
+    "stages": stages,
+    "stage_fertilizers_json": stage_fertilizers_json,
+}
     return render(request, "fertilizer_recommendation.html", context)
 
 
@@ -549,6 +554,21 @@ def soil_summary(request, soil_name):
         "summary": summary_text,
     }
     return render(request, "soil_summary.html", context)
+
+@login_required
+def crop_applications_api(request, crop_id):
+    """
+    Returns the number of fertilizer applications for a given crop
+    """
+    try:
+        app_data = CropApplication.objects.get(crop__id=crop_id)
+        return JsonResponse({
+            "num_applications": app_data.num_applications,
+            "description": app_data.description
+        })
+    except CropApplication.DoesNotExist:
+        return JsonResponse({"error": "No application data found for this crop"}, status=404)
+
 
 
 

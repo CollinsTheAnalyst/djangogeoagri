@@ -34,4 +34,7 @@ urlpatterns = [
     path('fertilizer-api/<int:crop_id>/', views.get_crop_recommendation, name='get_crop_recommendation'),
 
     path('save-farm-boundary/', views.save_farm_boundary, name='save_farm_boundary'),
+
+    path('crop-applications/<int:crop_id>/', views.crop_applications_api, name='crop_applications_api'),
+
 ]

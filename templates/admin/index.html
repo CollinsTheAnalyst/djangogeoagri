@@ -1,0 +1,52 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="display-6 mb-4">🌾 GeoAgri Dashboard</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Farms</h5>
+                    <h3>{{ farm_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Crops</h5>
+                    <h3>{{ crop_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Applications</h5>
+                    <h3>{{ app_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Blog Posts</h5>
+                    <h3>{{ blog_count }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h4>📰 Recent Updates</h4>
+    <ul>
+        {% for post in latest_posts %}
+            <li><strong>{{ post.title }}</strong> — {{ post.created_at|date:"M d, Y" }}</li>
+        {% empty %}
+            <li>No recent posts yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

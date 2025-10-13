@@ -1,0 +1,201 @@
+/* -------------------------- */
+/* General Body & Background */
+/* -------------------------- */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: url("../images/pexels-fabien-burgue-1052232-2317717.jpg") no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+    position: relative;
+    min-height: 300vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.45); /* dark overlay for readability */
+    z-index: -1;
+}
+
+/* -------------------------- */
+/* Hero Section */
+.hero {
+    background: rgba(0,0,0,0.35); /* subtle dark overlay for readability */
+    backdrop-filter: blur(3px);
+    border-radius: 30px;
+    margin: 2rem auto;
+    padding: 4rem 2rem;
+    max-width: 90%;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+/* Features Section */
+.features {
+    color: #fff;
+}
+
+.features h3 {
+    color: #fcd705;
+    margin-bottom: 1rem;
+}
+
+.features p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.features img {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;       /* take full width of the column */
+    height: auto;      /* maintain aspect ratio */
+    max-width: 500px;  /* optional: limit to 500px max */
+    border-radius: 15px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+}
+
+.features img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+}
+
+
+/* -------------------------- */
+/* Floating Curved Navbar */
+/* -------------------------- */
+.custom-navbar {
+    background: rgba(3, 56, 25, 0.9); /* semi-transparent green */
+    backdrop-filter: blur(6px);        /* glassy effect */
+    padding: 1rem 2rem;
+    margin: 1rem auto;
+    width: 90%;
+    border-radius: 50px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+}
+
+.custom-navbar:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+}
+
+/* Navbar Brand */
+.custom-navbar .navbar-brand {
+    color: #fff !important;
+    font-weight: 750;
+    font-size: 2rem;
+    letter-spacing: 1px;
+    transition: transform 0.2s ease;
+}
+
+.custom-navbar .navbar-brand:hover {
+    transform: scale(1.08);
+}
+
+/* Navbar Links */
+.custom-navbar .nav-link {
+    color: #f1f1f1 !important;
+    font-weight: 900;
+    letter-spacing: 0.75px;
+    margin-left: 1.5rem;
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease, text-decoration 0.2s ease;
+    text-decoration: none;
+}
+
+.custom-navbar .nav-link:first-child {
+    margin-left: 0;
+}
+
+.custom-navbar .nav-link:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fcd705 !important;
+    transform: translateY(-2px);
+    text-decoration: underline;
+}
+
+/* -------------------------- */
+/* Footer */
+/* -------------------------- */
+.footer {
+    background: rgba(3, 56, 25, 0.95); /* semi-transparent green with gradient */
+    background: linear-gradient(135deg, #033819, #02330d);
+    color: #f1f1f1;
+    width: 100%;
+    padding: 2rem 5%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: auto; /* sticks naturally at the bottom */
+}
+
+/* Footer Columns */
+.footer .row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+/* Footer Headings */
+.footer h5 {
+    color: #ffd700;
+    margin-bottom: 1rem;
+}
+
+/* Footer Text */
+.footer p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #e0e0e0;
+}
+
+/* Footer Links */
+.footer a.footer-link {
+    color: #f1f1f1;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.footer a.footer-link:hover {
+    color: #fcd705;
+    text-decoration: underline;
+    transform: translateY(-1px);
+}
+
+/* Social Icons */
+.footer .social-links .social-icon {
+    display: inline-block;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    transition: transform 0.2s ease, color 0.3s ease;
+    color: #f1f1f1;
+}
+
+.footer .social-links .social-icon:hover {
+    color: #fcd705;
+    transform: scale(1.2);
+}
+
+/* Footer Divider */
+.footer-divider {
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin: 1.5rem 0;
+}
+
+/* -------------------------- */
+/* Misc Adjustments */
+/* -------------------------- */
+main {
+    flex: 1 0 auto;
+}

@@ -13,6 +13,8 @@ import os
 from pathlib import Path
 import platform
 import ctypes.util
+from .jazzmin_config import JAZZMIN_SETTINGS, JAZZMIN_UI_TWEAKS
+
 
 if platform.system() == "Windows":
     # Local (conda)
@@ -41,6 +43,7 @@ ALLOWED_HOSTS = ["*"]
 
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,6 +57,9 @@ INSTALLED_APPS = [
     "django_plotly_dash.apps.DjangoPlotlyDashConfig",
     "dpd_static_support",  # static files for dash
     "channels",
+    'blog',
+    'ckeditor',
+    'ckeditor_uploader',
 ]
 
 
@@ -191,3 +197,8 @@ EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=True)
 
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+CKEDITOR_UPLOAD_PATH = "uploads/"
+
