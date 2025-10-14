@@ -85,14 +85,32 @@ except Exception as e:
     print("❌ Error initializing Earth Engine:", e)
 
 
-# Load Plant Disease Model
-MODEL_PATH = os.path.join(settings.BASE_DIR, "agrigeo", "potatoes.h5")
-try:
-    MODEL = load_model(MODEL_PATH, compile=False)
-    print("✅ Plant disease model loaded")
-except Exception as e:
-    MODEL = None
-    print("❌ Error loading plant disease model:", e)
+# ===========================
+# Load Plant Disease Models
+# ===========================
+MODEL_DIR = os.path.join(settings.BASE_DIR, "agrigeo", "models")
+
+MODEL_FILES = {
+    "potato": {"file": "potato_2.12.h5", "input_size": (256, 256)},
+    "maize": {"file": "Maize_disease_model_2.20.h5", "input_size": (224, 224)},
+    "wheat": {"file": "Wheat_disease_model_2.20.h5", "input_size": (224, 224)},
+    "tomato": {"file": "Tomato_disease_model_2.20.h5", "input_size": (224, 224)},
+}
+
+MODELS = {}
+for crop_name, info in MODEL_FILES.items():
+    path = os.path.join(MODEL_DIR, info["file"])
+    try:
+        model = load_model(path, compile=False)
+        MODELS[crop_name] = {
+            "model": model,
+            "input_size": info["input_size"]
+        }
+        print(f"✅ {crop_name} model loaded from {info['file']} with input size {info['input_size']}")
+    except Exception as e:
+        MODELS[crop_name] = None
+        print(f"❌ Error loading {crop_name} model: {e}")
+
 
 
 # ===========================
@@ -446,29 +464,60 @@ def predict_view(request):
         return JsonResponse({"error": "Invalid request"}, status=405)
 
     file: InMemoryUploadedFile = request.FILES.get("file")
-    crop = request.POST.get("crop")
+    crop = request.POST.get("crop", "").lower()
+    
     if not file:
         return JsonResponse({"error": "No file uploaded"}, status=400)
+    if crop not in MODELS or MODELS[crop] is None:
+        return JsonResponse({"error": f"No model available for crop '{crop}'"}, status=400)
+
+    model = MODELS[crop]
+
+    # Get the actual model and input size
+    model_info = MODELS[crop]        # dict with 'model' and 'input_size'
+    model = model_info['model']      # actual Keras model
+    TARGET_SIZE = model_info['input_size']  # use the stored input size
 
     try:
-        img = image.load_img(file, target_size=(224, 224))
+        # Load and preprocess image
+        img = image.load_img(BytesIO(file.read()), target_size=TARGET_SIZE)
         img_array = image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-        preds = MODEL.predict(img_array)
-        predicted_class = int(np.argmax(preds[0]))
+        # Make prediction
+        preds = model.predict(img_array)
+        predicted_class_idx = int(np.argmax(preds[0]))
         confidence = float(np.max(preds[0]))
 
-        # TODO: Replace with actual model class labels
-        class_labels = ["Healthy", "Disease A", "Disease B"]
-        disease = class_labels[predicted_class] if predicted_class < len(class_labels) else "Unknown"
+        # Class labels
+        CLASS_LABELS = {
+            "potato": ["Potato___Early_blight", "Potato___healthy", "Potato___Late_blight"],
+            "wheat": ['aphid_valid', 'black_rust_valid', 'blast_test_valid', 'brown_rust_valid',
+                      'common_root_rot_valid', 'fusarium_head_blight_valid', 'healthy_valid',
+                      'leaf_blight_valid', 'mildew_valid', 'mite_valid', 'septoria_valid',
+                      'smut_valid', 'stem_fly_valid', 'tan_spot_valid', 'yellow_rust_valid'],
+            "tomato": ['Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight',
+                       'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot',
+                       'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
+                       'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus',
+                       'Tomato___healthy'],
+            "maize": ['Cercospora_leaf_spot Gray_leaf_spot', 'Common_rust_', 'Gray_Leaf_Spot',
+                      'Healthy', 'Northern_Leaf_Blight']
+        }
+
+        disease = CLASS_LABELS.get(crop, ["Unknown"])[predicted_class_idx]
+
+        # Example stage/treatment - can be improved later
+        stage = "Early"
+        treatment = "Apply recommended fungicide"
 
         return JsonResponse({
             "prediction": disease,
             "confidence": confidence,
-            "stage": "Early",
-            "treatment": "Apply recommended fungicide",
+            "stage": stage,
+            "treatment": treatment,
         })
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 

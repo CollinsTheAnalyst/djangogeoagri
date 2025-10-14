@@ -29,45 +29,51 @@ if (fileInput) {
 // Predict button logic
 if (predictBtn) {
     predictBtn.addEventListener("click", async function () {
-        if (!fileInput.files || fileInput.files.length === 0) {
-            alert("Please upload an image first.");
-            return;
-        }
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Please upload an image first.");
+        return;
+    }
 
-        const file = fileInput.files[0];
-        const crop = cropSelect.value;
+    const file = fileInput.files[0];
+    const crop = cropSelect.value;
 
-        // Create form data
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("crop", crop);
+    // DEBUG: Check file and crop
+    console.log("Selected crop:", crop);
+    console.log("File to upload:", file);
 
-        // Show loading state
-        predictBtn.disabled = true;
-        predictBtn.innerText = "Predicting...";
-        diseaseEl.innerText = "Detecting...";
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("crop", crop);
 
-        try {
-            const resp = await fetch("/predict/", { method: "POST", body: formData });
+    // Show loading state
+    predictBtn.disabled = true;
+    predictBtn.innerText = "Predicting...";
+    diseaseEl.innerText = "Detecting...";
 
-            if (!resp.ok) throw new Error("Server error");
+    try {
+        const resp = await fetch("/predict/", { method: "POST", body: formData });
 
-            const data = await resp.json();
-            console.log("Prediction response:", data);
+        // DEBUG: Check HTTP status
+        console.log("Response status:", resp.status);
 
-            // Fill results (depends on backend response shape)
-            diseaseEl.innerText = data.prediction || "Unknown";
-            confidenceEl.innerText = data.confidence
-                ? (data.confidence * 100).toFixed(2) + "%"
-                : "---";
-            stageEl.innerText = data.stage || "N/A";
-            treatmentEl.innerText = data.treatment || "N/A";
-        } catch (err) {
-            console.error("Prediction failed:", err);
-            alert("Prediction failed. Check console for details.");
-        } finally {
-            predictBtn.disabled = false;
-            predictBtn.innerText = "🔍 Predict";
-        }
-    });
+        if (!resp.ok) throw new Error("Server error");
+
+        const data = await resp.json();
+        console.log("Prediction response:", data);
+
+        diseaseEl.innerText = data.prediction || "Unknown";
+        confidenceEl.innerText = data.confidence
+            ? (data.confidence * 100).toFixed(2) + "%"
+            : "---";
+        stageEl.innerText = data.stage || "N/A";
+        treatmentEl.innerText = data.treatment || "N/A";
+    } catch (err) {
+        console.error("Prediction failed:", err);
+        alert("Prediction failed. Check console for details.");
+    } finally {
+        predictBtn.disabled = false;
+        predictBtn.innerText = "🔍 Predict";
+    }
+});
+
 }
