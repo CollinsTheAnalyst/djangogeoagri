@@ -8,8 +8,10 @@ def legacy_inputlayer(*args, **kwargs):
         kwargs.pop('batch_shape')
     return InputLayer(*args, **kwargs)
 
-# Ignore old DTypePolicy references
-ignore_dtype_policy = lambda x: None
+# Minimal dummy class to replace DTypePolicy
+class DummyDTypePolicy:
+    def __init__(self, *args, **kwargs):
+        pass
 
 models = ["Wheat", "Maize", "Tomato"]
 
@@ -22,7 +24,7 @@ for m in models:
     try:
         with custom_object_scope({
             'InputLayer': legacy_inputlayer,
-            'DTypePolicy': ignore_dtype_policy
+            'DTypePolicy': DummyDTypePolicy
         }):
             model = load_model(h5_path)
         

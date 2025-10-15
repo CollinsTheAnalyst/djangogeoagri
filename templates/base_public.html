@@ -23,7 +23,7 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link px-3" href="{% url 'login' %}">Login / Register</a></li>
-        <li class="nav-item"><a class="nav-link px-3" href="/blog/">Blog</a></li>
+        <li class="nav-item"><a class="nav-link px-3" href="{% url 'blog:list' %}">Blog</a></li>
         <li class="nav-item"><a class="nav-link px-3" href="/contact/">Contact Us</a></li>
       </ul>
     </div>
@@ -52,7 +52,7 @@
         <ul class="list-unstyled">
           <li><a href="/" class="footer-link">Home</a></li>
           <li><a href="{% url 'login' %}" class="footer-link">Login / Register</a></li>
-          <li><a href="/blog/" class="footer-link">Blog</a></li>
+          <li><a href="{% url 'blog:list' %}" class="footer-link">Blog</a></li>
           <li><a href="/contact/" class="footer-link">Contact Us</a></li>
         </ul>
       </div>
