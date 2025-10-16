@@ -10,6 +10,7 @@ urlpatterns = [
     path('plant-disease/', views.plant_disease, name='plant_disease'),
     path('soil-nutrients/', views.soil_nutrients, name='soil_nutrients'),
     path('soil-taxonomy/', views.soil_taxonomic_groups, name='soil_taxonomic_groups'),
+    path('contact/', views.contact, name='contact'),
 
     # API endpoints
     path('save-boundary/', views.save_boundary, name='save_boundary'),

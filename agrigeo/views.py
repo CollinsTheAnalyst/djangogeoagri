@@ -617,6 +617,31 @@ def crop_applications_api(request, crop_id):
         })
     except CropApplication.DoesNotExist:
         return JsonResponse({"error": "No application data found for this crop"}, status=404)
+    
+
+from django.shortcuts import render
+from django.core.mail import send_mail
+from django.conf import settings
+
+def contact(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        message = request.POST.get('message')
+        
+        # Optional: send email
+        send_mail(
+            f'Contact Form Message from {name}',
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.DEFAULT_FROM_EMAIL],
+            fail_silently=True,
+        )
+        
+        return render(request, 'contact.html', {'success': True})
+    
+    return render(request, 'contact.html')
+
 
 
 

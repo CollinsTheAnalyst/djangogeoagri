@@ -1,0 +1,168 @@
+{% extends "base_public.html" %}
+
+{% block content %}
+<!-- Load Font Awesome for social icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+<!-- Load Inter font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    background: linear-gradient(135deg, #f0fdf4, #e6f7e8);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  .contact-section {
+    padding: 4rem 0;
+  }
+
+  .contact-card {
+    background: #ffffff;
+    border-radius: 1rem;
+    padding: 2.5rem;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: #212529; /* Ensures all text, including <p> and <strong>, is visible */
+}
+
+    .contact-card p, 
+    .contact-card strong {
+        color: #212529; /* Optional: explicitly reinforce visibility */
+    }
+
+
+  .contact-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.12);
+  }
+
+  .contact-card h1, .contact-card h4, .contact-card h5 {
+    color: #1b1b1b;
+  }
+
+  .contact-card input,
+  .contact-card textarea {
+    width: 100%;
+    border: 1.5px solid #d1e7dd;
+    border-radius: 0.5rem;
+    padding: 0.65rem 1rem;
+    font-size: 1rem;
+    color: #212529;
+    background-color: #ffffff;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: all 0.3s ease;
+  }
+
+  .contact-card input::placeholder,
+  .contact-card textarea::placeholder {
+    color: #6c757d;
+  }
+
+  .contact-card input:focus,
+  .contact-card textarea:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+    outline: none;
+  }
+
+  .btn-send {
+    background: linear-gradient(90deg, #0d6efd, #3a8dff);
+    color: #fff;
+    padding: 0.6rem 1.8rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    border: none;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: all 0.3s ease;
+  }
+
+  .btn-send:hover {
+    background: linear-gradient(90deg, #0b5ed7, #2a7bdb);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  }
+
+  .social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: #f0f0f0;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    color: #0d6efd;
+    font-size: 1.1rem;
+  }
+
+  .social-icons a:hover {
+    background: #0d6efd;
+    color: #fff;
+    transform: scale(1.1);
+  }
+
+  @media (min-width: 992px) {
+    .contact-row {
+      gap: 2rem;
+    }
+  }
+</style>
+
+<div class="container contact-section">
+  <div class="row contact-row justify-content-center">
+      <!-- Contact Form -->
+      <div class="col-lg-6">
+          <div class="contact-card">
+              <h1 class="mb-4 fw-bold">Get in Touch</h1>
+
+              <!-- Django messages for success -->
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-success">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+
+              <form method="POST" class="d-flex flex-column gap-3">
+                  {% csrf_token %}
+                  <div>
+                      <label for="name" class="form-label">Name</label>
+                      <input type="text" name="name" id="name" placeholder="Your name" required>
+                  </div>
+                  <div>
+                      <label for="email" class="form-label">Email</label>
+                      <input type="email" name="email" id="email" placeholder="Your email" required>
+                  </div>
+                  <div>
+                      <label for="message" class="form-label">Message</label>
+                      <textarea name="message" id="message" rows="6" placeholder="Your message" required></textarea>
+                  </div>
+                  <button type="submit" class="btn-send mt-2">Send Message</button>
+              </form>
+          </div>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="col-lg-4">
+          <div class="contact-card">
+              <h4 class="mb-3 fw-bold">Contact Info</h4>
+              <p><strong>Name:</strong> Collins Kimathi Mwiti</p>
+              <p><strong>Email:</strong> collinskimathimwiti@gmail.com</p>
+              <p><strong>Phone:</strong> +254 714326105</p>
+
+              <h5 class="mt-4 mb-3 fw-bold">Connect with Me</h5>
+              <div class="d-flex gap-3 social-icons">
+                  <a href="https://www.linkedin.com/in/yourprofile" target="_blank">
+                      <i class="fab fa-linkedin"></i>
+                  </a>
+                  <a href="https://twitter.com/yourprofile" target="_blank">
+                      <i class="fab fa-twitter"></i>
+                  </a>
+                  <a href="https://www.facebook.com/yourprofile" target="_blank">
+                      <i class="fab fa-facebook"></i>
+                  </a>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

@@ -24,7 +24,9 @@
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link px-3" href="{% url 'login' %}">Login / Register</a></li>
         <li class="nav-item"><a class="nav-link px-3" href="{% url 'blog:list' %}">Blog</a></li>
-        <li class="nav-item"><a class="nav-link px-3" href="/contact/">Contact Us</a></li>
+        <li class="nav-item"> <a class="nav-link px-3 {% if request.path == '/contact/' %}active{% endif %}" href="{% url 'contact' %}">Contact</a></li>
+
+
       </ul>
     </div>
   </div>
