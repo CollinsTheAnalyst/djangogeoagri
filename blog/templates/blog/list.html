@@ -1,50 +1,206 @@
 {% extends "base_public.html" %}
 {% block content %}
 
-<div class="container mt-4">
-    <div class="row">
-        <!-- Main blog content -->
-        <div class="col-lg-9">
-            <div class="row">
-                {% for post in blog_posts %}
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100">
-                        {% if post.image %}
-                        <img src="{{ post.image.url }}" class="card-img-top" alt="{{ post.title }}">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ post.title }}</h5>
-                            <p class="card-text">{{ post.content|truncatewords:20 }}</p>
-                            <a href="{% url 'blog:detail' post.slug %}" class="btn btn-primary btn-sm">Read More</a>
+<style>
+body, main {
+  background: #f9fafb !important;
+}
 
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+/* ✅ Floating Category Navbar (adjusted position and width) */
+.category-nav {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #ffffff;
+  padding: 0.8rem 1.5rem;
+  margin: 3rem auto 2rem; /* ↓ lowered from the main navbar, ↑ closer to blog grid */
+  border-radius: 40px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  width: 80%; /* narrower bar for better proportion */
+  max-width: 940px;
+}
+
+.category-nav a {
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  color: #374151;
+  background-color: #fff;
+}
+.category-nav a:hover {
+  background-color: #e7f8ec;
+  border-color: #16a34a;
+  color: #065f46;
+}
+.category-nav a.active {
+  background-color: #16a34a;
+  color: white;
+  border-color: #16a34a;
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+/* ✅ Blog Container */
+.blog-container {
+  max-width: 1400px;
+  margin: 2rem auto 4rem; /* moved upward to match nav adjustment */
+  padding: 0 1.5rem;
+}
+
+/* Blog Grid */
+.blog-grid {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 3.5rem;
+}
+
+.blog-card {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 510px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: all 0.3s ease;
+}
+.blog-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+.blog-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+.blog-card-body {
+  padding: 1.5rem;
+}
+.blog-card-body h5 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.8rem;
+}
+.blog-card-body p {
+  color: #4b5563;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+.blog-card-body a {
+  color: #16a34a;
+  text-decoration: none;
+  font-weight: 600;
+}
+.blog-card-body a:hover {
+  text-decoration: underline;
+}
+
+/* Sidebar */
+.sidebar {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: fit-content;
+}
+.sidebar h5 {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+.sidebar input {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+.sidebar .list-group-item {
+  border: none;
+  padding: 0.5rem 0;
+  background: transparent;
+}
+.sidebar a {
+  color: #1f2937;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.sidebar a:hover {
+  color: #16a34a;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+  .category-nav {
+    width: 90%;
+    border-radius: 20px;
+    padding: 0.8rem;
+  }
+}
+</style>
+
+<!-- ✅ Floating Category Navbar -->
+<div class="category-nav">
+  <a href="{% url 'blog:list' %}"
+     class="{% if not active_category %}active{% endif %}">
+    All
+  </a>
+
+  {% for cat in categories %}
+    <a href="{% url 'blog:category' cat.slug %}"
+       class="{% if active_category and active_category.slug == cat.slug %}active{% endif %}">
+      {{ cat.name }}
+    </a>
+  {% endfor %}
+</div>
+
+<!-- ✅ Blog Grid -->
+<div class="blog-container">
+  <div class="blog-grid">
+    <div>
+      <div class="row g-4">
+        {% for post in blog_posts %}
+        <div class="col-md-4">
+          <div class="blog-card">
+            {% if post.image %}
+              <img src="{{ post.image.url }}" alt="{{ post.title }}">
+            {% endif %}
+            <div class="blog-card-body">
+              <h5>{{ post.title }}</h5>
+              <p class="card-text">{{ post.content|striptags|truncatewords:25 }}</p>
+              <a href="{% url 'blog:detail' post.slug %}">Read More →</a>
             </div>
+          </div>
         </div>
-
-        <!-- Sidebar for search & recent posts -->
-        <div class="col-lg-3">
-            <div class="mb-4">
-                <h5>Search Articles</h5>
-                <form method="GET" action="{% url 'blog:list' %}">
-                    <input type="text" name="q" class="form-control" placeholder="Search...">
-                </form>
-            </div>
-
-            <div>
-                <h5>Recent Articles</h5>
-                <ul class="list-group">
-                    {% for recent in recent_posts %}
-                    <li class="list-group-item">
-                        <a href="{% url 'blog:detail' recent.slug %}">{{ recent.title }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
+        {% endfor %}
+      </div>
     </div>
+
+    <aside class="sidebar">
+      <h5>Search Articles</h5>
+      <form method="GET" action="{% url 'blog:list' %}">
+        <input type="text" name="q" placeholder="Search...">
+      </form>
+
+      <h5>Recent Articles</h5>
+      <ul class="list-group">
+        {% for recent in recent_posts %}
+        <li class="list-group-item">
+          <a href="{% url 'blog:detail' recent.slug %}">{{ recent.title }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </aside>
+  </div>
 </div>
 
 {% endblock %}

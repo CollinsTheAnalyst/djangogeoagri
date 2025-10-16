@@ -55,11 +55,10 @@ INSTALLED_APPS = [
     'agrigeo',
     'accounts',
     "django_plotly_dash.apps.DjangoPlotlyDashConfig",
-    "dpd_static_support",  # static files for dash
+    "dpd_static_support",  
     "channels",
     'blog',
-    'ckeditor',
-    'ckeditor_uploader',
+    'django_ckeditor_5',
 ]
 
 
@@ -201,4 +200,28 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 CKEDITOR_UPLOAD_PATH = "uploads/"
+
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': [
+            {
+                'name': 'basic',
+                'items': [
+                    'heading', '|', 'bold', 'italic', 'link', 'blockQuote', 'codeBlock',
+                    '|', 'bulletedList', 'numberedList', '|', 'insertTable', 'mediaEmbed',
+                    '|', 'undo', 'redo'
+                ],
+            },
+        ],
+        'height': 400,
+        'width': 'auto',
+        'blockToolbar': ['paragraph', 'heading1', 'heading2', 'heading3'],
+        'image': {
+            'toolbar': ['imageTextAlternative', 'imageStyle:full', 'imageStyle:side'],
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells'],
+        },
+    }
+}
 

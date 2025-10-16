@@ -13,7 +13,8 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),  
     path("django_plotly_dash/", include("django_plotly_dash.urls")),
     path('admin/', admin.site.urls),             
-    path('ckeditor/', include('ckeditor_uploader.urls')),
+    path("ckeditor5/", include('django_ckeditor_5.urls')),
+
 ]
 
 # Serve uploaded media files during development
