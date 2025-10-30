@@ -10,6 +10,12 @@ from django.contrib.auth.models import User
 class FarmBoundary(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=True)
+    
+    # === ADD THESE TWO FIELDS ===
+    location = models.CharField(max_length=255, blank=True, help_text="Search location/address provided by the user.")
+    area = models.FloatField(default=0.0, help_text="Calculated area in acres.")
+    # ============================
+    
     boundary = models.PolygonField()
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -8,27 +8,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>GeoAgri Project {% block title %}Home{% endblock %}</title>
 
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
-
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
 
     {% block extra_css %}{% endblock %}
 
-    
-
-
     <style>
         /* ========================
-           Body Background
+            Body & Background
         ======================== */
         body {
-            background: linear-gradient(to right, #f0f8ff, #e6f2ff);
+            /* Gray to Light Blue Gradient */
+            background: linear-gradient(to right, #f8f8f8, #e0f2ff); 
             min-height: 100vh;
             position: relative;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -52,81 +53,98 @@
         }
 
         /* ========================
-           Navbar
+            Header (Dark Green Theme)
         ======================== */
-        .navbar {
-            background: rgba(0, 50, 0, 0.85);
-            backdrop-filter: blur(6px);
+        .custom-navbar {
+            background-color: #003200; 
+            border-bottom: 3px solid #60c844;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
         }
-        .navbar a.nav-link:hover {
-            text-decoration: underline;
+
+        .custom-navbar .navbar-brand {
+            color: #ffffff; 
+            font-size: 1.75rem;
+            /* FIX: Compensate for container padding on the left */
+            margin-left: -30px !important; 
+        }
+        
+        .custom-navbar .nav-link {
+            color: #ffffff; 
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            transition: color 0.2s;
+        }
+
+        .custom-navbar .nav-link:hover, 
+        .custom-navbar .nav-link.active {
             color: #b0e57c;
         }
-
-        /* ========================
-           Sidebar
-        ======================== */
-        .sidebar {
-            background-color: #f7f9f7;
-            min-height: 100vh;
-            padding-top: 20px;
-            border-right: 1px solid #e0e0e0;
-        }
-        .sidebar a {
-            display: block;
-            color: #333;
-            padding: 10px 20px;
-            border-radius: 6px;
-            margin-bottom: 5px;
-            transition: all 0.2s ease-in-out;
-            text-decoration: none;
-        }
-        .sidebar a:hover {
-            background-color: #b0e57c;
-            color: #fff;
-        }
-        .sidebar a.active {
-            background-color: #60c844;
-            color: #fff;
-            font-weight: bold;
-        }
-        .sidebar .sidebar-heading {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            padding: 10px 20px;
-            color: #555;
-            letter-spacing: 1px;
+        
+        .navbar-toggler-icon {
+             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
         }
 
-        /* Collapsible groups */
-        .sidebar .collapse-inner a {
-            padding-left: 40px;
-            font-size: 0.95rem;
-        }
-
-        /* ========================
-           Main Content
-        ======================== */
-        main {
+        /* =======================================
+            Main Content (Sub-container & Hover Effect)
+        ======================================= */
+        .main-content-wrapper {
             background-color: #ffffffcc;
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.08);
             margin-top: 20px;
             margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transform: scale(1);
+        }
+        
+        .main-content-wrapper:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transform: scale(0.995); 
         }
 
         /* ========================
-           Footer
+            Footer (Dark Green Theme & Font Size Increase)
         ======================== */
-        footer {
-            background-color: #1a1a1a;
+        .footer {
+            background-color: #003200;
             color: #fff;
-            padding: 15px 0;
+            margin-top: auto;
+        }
+        
+        .footer p {
+            font-size: 0.95rem; 
+        }
+        
+        .footer h5 {
+             font-size: 1.1rem; 
+        }
+
+        .footer-link {
+            color: #ccc;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem; 
+        }
+        .footer-link:hover {
+            color: #b0e57c;
+        }
+        .footer-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .social-icon {
+            color: #fff;
+            margin-right: 15px;
+            transition: color 0.2s;
+        }
+        .social-icon:hover {
+            color: #b0e57c;
         }
 
         /* ========================
-           Utility / Buttons
+            Utility / Buttons
         ======================== */
         .btn-primary-custom {
             background-color: #60c844;
@@ -141,46 +159,151 @@
         }
     </style>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
-    <!-- Navbar -->
-    <header class="navbar navbar-dark sticky-top flex-md-nowrap p-0 shadow">
-        <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 fs-6" href="#">GeoAgri</a>
-        <div class="navbar-nav ms-auto px-3">
-            {% if user.is_authenticated %}
-                <span class="navbar-text text-white me-3">
-                    Hello, {{ user.username }}
-                </span>
-                <a class="nav-link d-inline text-white" href="{% url 'logout' %}">Logout</a>
-            {% else %}
-                <a class="nav-link d-inline text-white" href="{% url 'login' %}">Login</a>
-            {% endif %}
+    <header class="navbar navbar-expand-lg shadow custom-navbar sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-3 p-0 **me-5**" href="{% url 'home' %}">
+                <i class="bi bi-geo-alt-fill me-1" style="color: #b0e57c;"></i> GeoAgri
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="bi bi-house-fill me-1"></i> Home
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'boundary_mapping' %}active{% endif %}" href="{% url 'boundary_mapping' %}">
+                            <i class="bi bi-map me-1"></i> Boundary
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'ndvi_explorer' %}active{% endif %}" href="{% url 'ndvi_explorer' %}">
+                            <i class="bi bi-graph-up me-1"></i> NDVI
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'fertilizer_recommendation' %}active{% endif %}" href="{% url 'fertilizer_recommendation' %}">
+                            <i class="bi bi-plus-circle me-1"></i> Fertilizer
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'plant_disease' %}active{% endif %}" href="{% url 'plant_disease' %}">
+                            <i class="bi bi-bug-fill me-1"></i> Disease
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'soil_nutrients' %}active{% endif %}" href="{% url 'soil_nutrients' %}">
+                            <i class="bi bi-droplet me-1"></i> Soil Nutrients
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'soil_taxonomic_groups' %}active{% endif %}" href="{% url 'soil_taxonomic_groups' %}">
+                            <i class="bi bi-database me-1"></i> Soil Taxonomy
+                        </a>
+                    </li>
+
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'contact' %}">Contact Us</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'contact' %}">Contact</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </header>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            {% include 'Partials/sidebar.html' %}
-
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
-                {% block content %}{% endblock %}
-            </main>
+    <main class="container-fluid flex-grow-1">
+        <div class="main-content-wrapper">
+            {% block content %}{% endblock %}
         </div>
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer class="text-center mt-auto">
-        &copy; 2025 GeoAgri. All rights reserved.
+    <footer class="footer">
+        <div class="container py-5">
+            <div class="row text-white justify-content-between">
+
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold">About GeoAgri</h5>
+                    <p>Empowering farmers with data-driven solutions 🌱. Get insights, tools, and resources to maximize your farm’s potential.</p>
+                </div>
+
+                <div class="col-md-3 mb-4">
+                    <h5 class="fw-bold">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'home' %}" class="footer-link">Home Dashboard</a></li>
+                        <li><a href="{% url 'boundary_mapping' %}" class="footer-link">Farm Boundary</a></li>
+                        <li><a href="{% url 'ndvi_explorer' %}" class="footer-link">NDVI Explorer</a></li>
+                        <li><a href="{% url 'fertilizer_recommendation' %}" class="footer-link">Fertilizer Rec.</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-3 mb-4">
+                    <h5 class="fw-bold">Connect With Us</h5>
+                    <p>Email: info@geoagri.com</p>
+                    <p>Phone: +254 714326105</p>
+                    <div class="social-links mt-2">
+                        <a href="#" target="_blank" class="social-icon">
+                            <i class="fab fa-linkedin fa-lg"></i>
+                        </a>
+                        <a href="#" target="_blank" class="social-icon">
+                            <i class="fab fa-x-twitter fa-lg"></i>
+                        </a>
+                        <a href="#" target="_blank" class="social-icon">
+                            <i class="fab fa-facebook fa-lg"></i>
+                        </a>
+                    </div>
+                </div>
+
+
+            </div>
+            <hr class="footer-divider">
+            <div class="text-center mt-3 small">
+                &copy; 2025 GeoAgri. All Rights Reserved.
+            </div>
+        </div>
     </footer>
 
-    <!-- JS -->
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/leaflet.js' %}"></script>
 
-    {% block extra_js %}{% endblock %}
-    
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    {% block extra_js %}
+        {% endblock %}
+    
 </body>
 </html>

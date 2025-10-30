@@ -49,3 +49,4 @@ def blog_detail(request, slug):
         "related_posts": related_posts,
     }
     return render(request, "blog/detail.html", context)
+

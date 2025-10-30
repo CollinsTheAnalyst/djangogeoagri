@@ -643,7 +643,63 @@ def contact(request):
     return render(request, 'contact.html')
 
 
+# ... (rest of your imports and views) ...
 
+# ===========================
+# Farm Boundary Endpoints (UPDATED)
+# ===========================
+@login_required
+@csrf_exempt # Use this since the form submission is now intercepted and sent via Fetch/POST
+def save_farm_boundary(request):
+    """Save farm boundary from form submission and return Farm ID for redirection."""
+    if request.method == "POST":
+        
+        # Get data from POST (since it's a FormData object now)
+        farm_name = request.POST.get("farm_name")
+        location = request.POST.get("location")
+        boundary_geojson_str = request.POST.get("boundary")
+        area = request.POST.get("area") # Area is now passed from the client-side calculation
+        
+        if not all([farm_name, location, boundary_geojson_str, area]):
+            # Use JsonResponse for the Fetch API response
+            return JsonResponse({"status": "failed", "error": "All fields are required."}, status=400)
+
+        try:
+            # 1. Parse GeoJSON
+            geojson_data = json.loads(boundary_geojson_str)
+            geom = GEOSGeometry(json.dumps(geojson_data["geometry"]))
+            
+            # 2. Save to database
+            farm_boundary = FarmBoundary.objects.create(
+                owner=request.user,
+                name=farm_name,
+                location=location,
+                boundary=geom,
+                area=float(area) # Assuming area is stored as a float/decimal
+            )
+            
+            # 3. Success response with the Farm ID
+            return JsonResponse({
+                "status": "success", 
+                "message": "Farm boundary saved successfully.",
+                "farm_id": farm_boundary.id 
+            })
+            
+        except Exception as e:
+            # Failure response
+            print(f"Error saving boundary: {e}")
+            return JsonResponse({"status": "failed", "error": f"Internal server error: {e}"}, status=500)
+    else:
+        # If accessed via GET, redirect to the mapping page
+        return redirect('boundary_mapping') 
+        
+# Keep the save_boundary view for now, but its functionality is largely superseded 
+# by the updated save_farm_boundary view above.
+
+# @login_required
+# @csrf_exempt
+# def save_boundary(request):
+#     # ... (existing save_boundary view) ...
 
 
 
