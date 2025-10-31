@@ -1,4 +1,4 @@
-DjangoGeoAgri: Geospatial Agriculture Platform
+# *DjangoGeoAgri: Geospatial Agriculture Platform*
 
 ## Overview
 
