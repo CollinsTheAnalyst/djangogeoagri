@@ -152,7 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
@@ -225,3 +225,19 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
+# =======================================================
+# 🚀 FIX: DJANGO PLOTLY DASH CONFIGURATION (to eliminate Bootstrap conflict)
+# =======================================================
+# We explicitly tell DPD to use external assets (our main Bootstrap 5 CDN) 
+# and ignore its conflicting internal assets which break the modal.
+DJANGO_PLOTLY_DASH = {
+    'served_externally': True,
+    'external_js': None,
+    'external_css': None,
+    'external_dependencies': {
+        # This block is crucial for ensuring the conflict is suppressed.
+        'jquery_support': False,
+        'bootstrap_css': None,
+        'bootstrap_js': None
+    }
+}

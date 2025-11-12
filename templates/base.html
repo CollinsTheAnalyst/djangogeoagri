@@ -18,6 +18,7 @@
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
 
@@ -25,7 +26,7 @@
 
     <style>
         /* ========================
-            Body & Background
+           Body & Background
         ======================== */
         body {
             /* Gray to Light Blue Gradient */
@@ -53,7 +54,7 @@
         }
 
         /* ========================
-            Header (Dark Green Theme)
+           Header (Dark Green Theme)
         ======================== */
         .custom-navbar {
             background-color: #003200; 
@@ -86,7 +87,7 @@
         }
 
         /* =======================================
-            Main Content (Sub-container & Hover Effect)
+           Main Content (Sub-container & Hover Effect)
         ======================================= */
         .main-content-wrapper {
             background-color: #ffffffcc;
@@ -105,7 +106,7 @@
         }
 
         /* ========================
-            Footer (Dark Green Theme & Font Size Increase)
+           Footer (Dark Green Theme & Font Size Increase)
         ======================== */
         .footer {
             background-color: #003200;
@@ -144,7 +145,7 @@
         }
 
         /* ========================
-            Utility / Buttons
+           Utility / Buttons
         ======================== */
         .btn-primary-custom {
             background-color: #60c844;
@@ -157,13 +158,34 @@
             border-color: #4caf33;
             color: #fff;
         }
+
+        /* 🟢 CRITICAL Z-INDEX FIX FOR MODAL CLICKABILITY 🟢 */
+        /* This set of rules uses an extreme Z-Index value to override any conflicting styles (Leaflet, Tailwind). */
+        .modal {
+            z-index: 1000000 !important; /* Extremely high Z-Index for modal container */
+        }
+        
+        .modal-backdrop {
+            z-index: 999999 !important; /* One level below the modal container */
+        }
+        
+        .modal-content {
+            z-index: 1000001 !important; /* Ensure the content is absolutely on top */
+        }
+        
+        #successModal a {
+            /* Ensures that clicks register on the anchor tag itself */
+            pointer-events: auto !important; 
+        }
+        /* ----------------------------------------------- */
+
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
     <header class="navbar navbar-expand-lg shadow custom-navbar sticky-top">
         <div class="container">
-            <a class="navbar-brand fw-bold fs-3 p-0 **me-5**" href="{% url 'home' %}">
+            <a class="navbar-brand fw-bold fs-3 p-0 me-5" href="{% url 'home' %}">
                 <i class="bi bi-geo-alt-fill me-1" style="color: #b0e57c;"></i> GeoAgri
             </a>
             
@@ -189,10 +211,21 @@
                     
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'ndvi_explorer' %}active{% endif %}" href="{% url 'ndvi_explorer' %}">
-                            <i class="bi bi-graph-up me-1"></i> NDVI
+                            <i class="fas fa-leaf me-1"></i> NDVI
                         </a>
                     </li>
-
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'soil_nutrients' %}active{% endif %}" href="{% url 'soil_nutrients' %}">
+                            <i class="fas fa-flask me-1"></i> Nutrients
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'soil_taxonomic_groups' %}active{% endif %}" href="{% url 'soil_taxonomic_groups' %}">
+                            <i class="fas fa-layer-group me-1"></i> Taxonomy
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'fertilizer_recommendation' %}active{% endif %}" href="{% url 'fertilizer_recommendation' %}">
                             <i class="bi bi-plus-circle me-1"></i> Fertilizer
@@ -205,18 +238,6 @@
                         </a>
                     </li>
                     
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'soil_nutrients' %}active{% endif %}" href="{% url 'soil_nutrients' %}">
-                            <i class="bi bi-droplet me-1"></i> Soil Nutrients
-                        </a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'soil_taxonomic_groups' %}active{% endif %}" href="{% url 'soil_taxonomic_groups' %}">
-                            <i class="bi bi-database me-1"></i> Soil Taxonomy
-                        </a>
-                    </li>
-
                 </ul>
                 
                 <ul class="navbar-nav">
@@ -264,8 +285,13 @@
                     <ul class="list-unstyled">
                         <li><a href="{% url 'home' %}" class="footer-link">Home Dashboard</a></li>
                         <li><a href="{% url 'boundary_mapping' %}" class="footer-link">Farm Boundary</a></li>
+                        
                         <li><a href="{% url 'ndvi_explorer' %}" class="footer-link">NDVI Explorer</a></li>
+                        <li><a href="{% url 'soil_nutrients' %}" class="footer-link">Soil Nutrients</a></li>
+                        <li><a href="{% url 'soil_taxonomic_groups' %}" class="footer-link">Soil Taxonomy</a></li>
+                        
                         <li><a href="{% url 'fertilizer_recommendation' %}" class="footer-link">Fertilizer Rec.</a></li>
+                        <li><a href="{% url 'plant_disease' %}" class="footer-link">Disease</a></li>
                     </ul>
                 </div>
 
@@ -295,7 +321,10 @@
         </div>
     </footer>
 
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+            crossorigin="anonymous"></script>
+
     <script src="{% static 'js/leaflet.js' %}"></script>
 
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>

@@ -15,11 +15,13 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.templatetags.static import static
 from django.conf import settings
+from django.core.mail import send_mail # Assuming this is available, if not, remove/comment out the import and contact logic.
 
 from django.core.serializers.json import DjangoJSONEncoder
 
 from django.contrib.gis.geos import GEOSGeometry
 
+# NOTE: Importing load_model and image might need a check on the TensorFlow environment
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 
@@ -64,8 +66,8 @@ SOIL_REPORTS = {
     "Zo": "Orthic Solonchanks.pdf",
     "Fp": "plinthic Ferralsols.pdf",
     "Re": "Eutric Regosols.pdf",
-    "G":  "GLEYSOLS.pdf",
-    "I":  "Lithosols.pdf",
+    "G": "GLEYSOLS.pdf",
+    "I": "Lithosols.pdf",
     "Jc": "Calcaric Fluviosols.pdf",
     "Rc": "Calcaric Regosols.pdf",
     "Xk": "Calcic Xerosols.pdf",
@@ -112,7 +114,6 @@ for crop_name, info in MODEL_FILES.items():
         print(f"❌ Error loading {crop_name} model: {e}")
 
 
-
 # ===========================
 # Public Views
 # ===========================
@@ -152,16 +153,125 @@ def fertilizer_recommendation(request):
     stage_fertilizers_json = json.dumps(stage_fertilizers, cls=DjangoJSONEncoder)
 
     context = {
-    "crops": crops,
-    "stages": stages,
-    "stage_fertilizers_json": stage_fertilizers_json,
-}
+        "crops": crops,
+        "stages": stages,
+        "stage_fertilizers_json": stage_fertilizers_json,
+    }
     return render(request, "fertilizer_recommendation.html", context)
 
 
+# REMOVED: ndvi_selection_view, soil_nutrients_selection, soil_taxonomy_selection
+# The views below now handle both the selection (generic) and the analysis (dynamic) logic.
+
+
+# =======================================================
+# Dynamic/Generic Analysis Views (Hybrid - farm_id is OPTIONAL)
+# =======================================================
 @login_required
-def ndvi_explorer(request):
-    return render(request, 'ndvi_explorer.html')
+def ndvi_explorer(request, **kwargs):
+    """
+    Renders the NDVI explorer page. 
+    Handles both /ndvi-explorer/ (generic) and /farm-details/<int:farm_id>/ndvi/ (dynamic).
+    """
+    farm_id = kwargs.get('farm_id')
+    context = {}
+    
+    if farm_id is None:
+        # 1. Generic View Logic (Initial Page Load/Selection)
+        user_farms = FarmBoundary.objects.filter(owner=request.user).order_by('name')
+        context.update({
+            'page_title': 'NDVI Explorer - Select a Farm',
+            'farms': user_farms,
+            'is_selection_mode': True, # Flag for JavaScript/Template to know it's selection mode
+        })
+    else:
+        # 2. Dynamic View Logic (Farm Selected)
+        try:
+            # Fetch the FarmBoundary object, ensuring it belongs to the logged-in user
+            farm_boundary = FarmBoundary.objects.get(id=farm_id, owner=request.user)
+            context.update({
+                'page_title': f'NDVI Explorer - {farm_boundary.name}',
+                'farm_id': farm_id,
+                'farm_name': farm_boundary.name,
+                # Pass the geometry as a GeoJSON string for use in JavaScript
+                'farm_geometry': farm_boundary.boundary.json, 
+                'is_selection_mode': False,
+            })
+        except FarmBoundary.DoesNotExist:
+            messages.error(request, f"Farm with ID {farm_id} not found or you do not have permission.")
+            return redirect('ndvi_explorer') # Redirect back to the selection mode
+
+    return render(request, 'ndvi_explorer.html', context)
+
+
+@login_required
+def soil_nutrients(request, **kwargs):
+    """
+    Renders the soil nutrients page. 
+    Handles both /soil-nutrients/ (generic) and /farm-details/<int:farm_id>/soil-nutrients/ (dynamic).
+    """
+    farm_id = kwargs.get('farm_id')
+    context = {}
+
+    if farm_id is None:
+        # 1. Generic View Logic (Initial Page Load/Selection)
+        user_farms = FarmBoundary.objects.filter(owner=request.user).order_by('name')
+        context.update({
+            'page_title': 'Soil Nutrients - Global View',
+            'farms': user_farms,
+            'is_selection_mode': True,
+        })
+    else:
+        # 2. Dynamic View Logic (Farm Selected)
+        try:
+            farm_boundary = FarmBoundary.objects.get(id=farm_id, owner=request.user)
+            context.update({
+                'page_title': f'Soil Nutrients - {farm_boundary.name}',
+                'farm_id': farm_id,
+                'farm_name': farm_boundary.name,
+                'farm_geometry': farm_boundary.boundary.json, 
+                'is_selection_mode': False,
+            })
+        except FarmBoundary.DoesNotExist:
+            messages.error(request, f"Farm with ID {farm_id} not found or you do not have permission.")
+            return redirect('soil_nutrients') # Redirect back to the selection mode
+            
+    return render(request, 'soil_nutrients.html', context)
+
+
+@login_required
+def soil_taxonomic_groups(request, **kwargs):
+    """
+    Renders the soil taxonomy page.
+    Handles both /soil-taxonomy/ (generic) and /farm-details/<int:farm_id>/soil-taxonomy/ (dynamic).
+    """
+    farm_id = kwargs.get('farm_id')
+    context = {"SOIL_REPORTS": SOIL_REPORTS} # Always include global reports data
+
+    if farm_id is None:
+        # 1. Generic View Logic (Initial Page Load/Selection)
+        user_farms = FarmBoundary.objects.filter(owner=request.user).order_by('name')
+        context.update({
+            'page_title': 'Soil Taxonomy - Global View',
+            'farms': user_farms,
+            'is_selection_mode': True,
+        })
+    else:
+        # 2. Dynamic View Logic (Farm Selected)
+        try:
+            farm_boundary = FarmBoundary.objects.get(id=farm_id, owner=request.user)
+            context.update({
+                'page_title': f'Soil Taxonomy - {farm_boundary.name}',
+                'farm_id': farm_id,
+                'farm_name': farm_boundary.name,
+                'farm_geometry': farm_boundary.boundary.json, 
+                'is_selection_mode': False,
+            })
+        except FarmBoundary.DoesNotExist:
+            messages.error(request, f"Farm with ID {farm_id} not found or you do not have permission.")
+            return redirect('soil_taxonomic_groups') # Redirect back to the selection mode
+            
+    return render(request, "soil_taxonomy.html", context)
 
 
 @login_required
@@ -169,56 +279,62 @@ def plant_disease(request):
     return render(request, 'plant_disease.html')
 
 
-@login_required
-def soil_nutrients(request):
-    return render(request, 'soil_nutrients.html')
-
-
-@login_required
-def soil_taxonomic_groups(request):
-    context = {"SOIL_REPORTS": SOIL_REPORTS}
-    return render(request, "soil_taxonomy.html", context)
-
-
-
 # ===========================
 # Farm Boundary Endpoints
 # ===========================
 @login_required
+@csrf_exempt
 def save_farm_boundary(request):
-    """Save farm boundary from form submission"""
-    if request.method == "POST":
-        farm_name = request.POST.get("farm_name")
-        location = request.POST.get("location")
-        boundary = request.POST.get("boundary")
-        area = request.POST.get("area")
+    """
+    Save farm boundary from AJAX request.
+    
+    FIX: This function now correctly returns a JSON response with the farm_id, 
+    and it only attempts to save fields ('owner', 'name', 'boundary') present 
+    in the FarmBoundary model.
+    """
+    if request.method != "POST":
+        return JsonResponse({"status": "failed", "error": "POST request required."}, status=405)
 
-        if not all([farm_name, location, boundary, area]):
-            messages.error(request, "All fields are required.")
-            return redirect('boundary_mapping')
+    try:
+        # 1. Capture data using keys matching the formData.append calls in boundary_mapping.js
+        farm_name = request.POST.get("name") 
+        boundary_geojson_str = request.POST.get("geometry")
+        
+        # Capture fields not saved to model but needed for client-side response
+        location_val = request.POST.get("location") 
+        area_val = request.POST.get("area") 
+        
+        if not all([farm_name, boundary_geojson_str]):
+            return JsonResponse({"status": "failed", "error": "Missing required data (Farm Name or Boundary Geometry)."}, status=400)
 
-        try:
-            geom = GEOSGeometry(json.dumps(json.loads(boundary)["geometry"]))
-            FarmBoundary.objects.create(
-                owner=request.user,
-                name=farm_name,
-                location=location,
-                boundary=geom,
-                area=float(area)
-            )
-            messages.success(request, "Farm boundary saved successfully.")
-        except Exception as e:
-            messages.error(request, f"Error saving boundary: {e}")
-
-        return redirect('boundary_mapping')
-    else:
-        return redirect('boundary_mapping')
-
-
+        # 2. Parse GeoJSON
+        # GEOSGeometry can load the GeoJSON geometry string directly.
+        geom = GEOSGeometry(boundary_geojson_str)
+        
+        # 3. Save to database - ONLY using fields defined in FarmBoundary model
+        farm_boundary = FarmBoundary.objects.create(
+            owner=request.user,
+            name=farm_name,
+            boundary=geom,
+        )
+        
+        # 4. Success: Return JSON response with the newly created ID
+        return JsonResponse({
+            "status": "success", 
+            "message": "Farm boundary saved successfully.",
+            "farm_id": farm_boundary.id, # CRITICAL: This is used by JS for modal links
+            "area": area_val 
+        })
+        
+    except Exception as e:
+        # Catch GEOSGeometry conversion errors or database errors
+        print(f"Error saving boundary: {e}")
+        return JsonResponse({"status": "failed", "error": f"Internal server error: {e}"}, status=500)
+        
 @login_required
 @csrf_exempt
 def save_boundary(request):
-    """Save farm boundary via AJAX / JSON"""
+    """Save farm boundary via AJAX / JSON - Kept for compatibility."""
     if request.method != "POST":
         return JsonResponse({"status": "failed", "error": "POST request required"}, status=400)
     try:
@@ -231,7 +347,6 @@ def save_boundary(request):
         return JsonResponse({"status": "success", "id": boundary.id})
     except Exception as e:
         return JsonResponse({"status": "failed", "error": str(e)}, status=400)
-
 
 # ===========================
 # Counties & Geometry
@@ -475,8 +590,8 @@ def predict_view(request):
 
     # Get the actual model and input size
     model_info = MODELS[crop]        # dict with 'model' and 'input_size'
-    model = model_info['model']      # actual Keras model
-    TARGET_SIZE = model_info['input_size']  # use the stored input size
+    model = model_info['model']        # actual Keras model
+    TARGET_SIZE = model_info['input_size']     # use the stored input size
 
     try:
         # Load and preprocess image
@@ -497,10 +612,10 @@ def predict_view(request):
                       'leaf_blight_valid', 'mildew_valid', 'mite_valid', 'septoria_valid',
                       'smut_valid', 'stem_fly_valid', 'tan_spot_valid', 'yellow_rust_valid'],
             "tomato": ['Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight',
-                       'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot',
-                       'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
-                       'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus',
-                       'Tomato___healthy'],
+                        'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot',
+                        'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
+                        'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus',
+                        'Tomato___healthy'],
             "maize": ['Cercospora_leaf_spot Gray_leaf_spot', 'Common_rust_', 'Gray_Leaf_Spot',
                       'Healthy', 'Northern_Leaf_Blight']
         }
@@ -568,9 +683,6 @@ def reverse_geocode(request):
 # ===========================
 # Soil Reports Mapping
 # ===========================
-# Map soil names to PDF report files
-
-
 def download_soil_report(request, soil_code):
     if soil_code not in SOIL_REPORTS:
         raise Http404("No report found for this soil type")
@@ -582,8 +694,6 @@ def download_soil_report(request, soil_code):
         raise Http404("Report file not found on server")
 
     return FileResponse(open(file_path, "rb"), as_attachment=True, filename=report_filename)
-
-
 
 
 @login_required
@@ -619,95 +729,21 @@ def crop_applications_api(request, crop_id):
         return JsonResponse({"error": "No application data found for this crop"}, status=404)
     
 
-from django.shortcuts import render
-from django.core.mail import send_mail
-from django.conf import settings
-
 def contact(request):
     if request.method == "POST":
         name = request.POST.get('name')
         email = request.POST.get('email')
         message = request.POST.get('message')
         
-        # Optional: send email
-        send_mail(
-            f'Contact Form Message from {name}',
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [settings.DEFAULT_FROM_EMAIL],
-            fail_silently=True,
-        )
+        # Optional: send email - requires send_mail import and configuration
+        # send_mail(
+        #     f'Contact Form Message from {name}',
+        #     message,
+        #     settings.DEFAULT_FROM_EMAIL,
+        #     [settings.DEFAULT_FROM_EMAIL],
+        #     fail_silently=True,
+        # )
         
         return render(request, 'contact.html', {'success': True})
     
     return render(request, 'contact.html')
-
-
-# ... (rest of your imports and views) ...
-
-# ===========================
-# Farm Boundary Endpoints (UPDATED)
-# ===========================
-@login_required
-@csrf_exempt # Use this since the form submission is now intercepted and sent via Fetch/POST
-def save_farm_boundary(request):
-    """Save farm boundary from form submission and return Farm ID for redirection."""
-    if request.method == "POST":
-        
-        # Get data from POST (since it's a FormData object now)
-        farm_name = request.POST.get("farm_name")
-        location = request.POST.get("location")
-        boundary_geojson_str = request.POST.get("boundary")
-        area = request.POST.get("area") # Area is now passed from the client-side calculation
-        
-        if not all([farm_name, location, boundary_geojson_str, area]):
-            # Use JsonResponse for the Fetch API response
-            return JsonResponse({"status": "failed", "error": "All fields are required."}, status=400)
-
-        try:
-            # 1. Parse GeoJSON
-            geojson_data = json.loads(boundary_geojson_str)
-            geom = GEOSGeometry(json.dumps(geojson_data["geometry"]))
-            
-            # 2. Save to database
-            farm_boundary = FarmBoundary.objects.create(
-                owner=request.user,
-                name=farm_name,
-                location=location,
-                boundary=geom,
-                area=float(area) # Assuming area is stored as a float/decimal
-            )
-            
-            # 3. Success response with the Farm ID
-            return JsonResponse({
-                "status": "success", 
-                "message": "Farm boundary saved successfully.",
-                "farm_id": farm_boundary.id 
-            })
-            
-        except Exception as e:
-            # Failure response
-            print(f"Error saving boundary: {e}")
-            return JsonResponse({"status": "failed", "error": f"Internal server error: {e}"}, status=500)
-    else:
-        # If accessed via GET, redirect to the mapping page
-        return redirect('boundary_mapping') 
-        
-# Keep the save_boundary view for now, but its functionality is largely superseded 
-# by the updated save_farm_boundary view above.
-
-# @login_required
-# @csrf_exempt
-# def save_boundary(request):
-#     # ... (existing save_boundary view) ...
-
-
-
-
-
-
-
-
-    
-
-

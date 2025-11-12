@@ -1,45 +1,45 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Boundary Mapping{% endblock %}
+{% block title %}Farm Boundary Mapping{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
-    <style>
-        /* Ensure the map container fills its designated space */
-        #map {
-            width: 100%;
-            height: 80vh; /* Adjusted height for map dominance */
-            border-radius: 0.5rem;
-        }
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" class="d-none d-md-block" />
+<style>
+    /* Map Container Styling */
+    #map {
+        width: 100%;
+        height: 80vh;
+        border-radius: 0.5rem;
+    }
 
-        /* Custom secondary button style for Draw Boundary */
-        .btn-secondary-custom {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            color: #fff;
-        }
-        .btn-secondary-custom:hover {
-            background-color: #5a6268;
-            border-color: #545b62;
-        }
+    /* Custom Colors */
+    .btn-secondary-custom {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: #fff;
+    }
+    .btn-secondary-custom:hover {
+        background-color: #5a6268;
+    }
+    .card {
+        border: none;
+        border-radius: 12px;
+    }
+    /* Custom outline button for modal links (Green) */
+    .btn-outline-primary-custom {
+        color: #60c844;
+        border-color: #60c844;
+    }
+    .btn-outline-primary-custom:hover {
+        color: #fff;
+        background-color: #60c844;
+    }
 
-        /* Style for the card containing the map and details */
-        .card {
-            border: none;
-            border-radius: 12px;
-        }
-        
-        /* Custom outline button for modal links */
-        .btn-outline-primary-custom {
-            color: #60c844;
-            border-color: #60c844;
-        }
-        .btn-outline-primary-custom:hover {
-            color: #fff;
-            background-color: #60c844;
-        }
-    </style>
+    /* The CRITICAL Z-INDEX FIX has been moved to base.html 
+       to ensure it overrides all global CSS conflicts (like Tailwind). */
+
+</style>
 {% endblock %}
 
 {% block content %}
@@ -63,11 +63,11 @@
                     <form id="farmBoundaryForm" method="POST" action="{% url 'save_farm_boundary' %}">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="farm_name" class="form-label">**Farm Name**</label>
-                            <input type="text" class="form-control" id="farm_name" name="name" placeholder="e.g., Block 1" required>
+                            <label for="farm_name" class="form-label">Farm Name</label>
+                            <input type="text" class="form-control" id="farm_name" name="name" placeholder="Block 1" required>
                         </div>
                         <div class="mb-3">
-                            <label for="location" class="form-label">**Location** (e.g., Village/Town)</label>
+                            <label for="location" class="form-label">Location (e.g., Village/Town)</label>
                             <input type="text" class="form-control" id="location" name="location" placeholder="Nairobi, Kenya" required>
                         </div>
 
@@ -79,7 +79,7 @@
                                 <i class="bi bi-geo-alt-fill me-2"></i> Start Walk Around
                             </button>
                             
-                            <button type="button" class="btn btn-secondary-custom btn-lg" id="startDrawing">
+                            <button type="button" class="btn btn-secondary-custom btn-lg d-none d-md-block" id="startDrawing">
                                 <i class="bi bi-pencil-square me-2"></i> Draw Boundary
                             </button>
 
@@ -90,7 +90,7 @@
                     </form>
                     
                     <div id="areaDisplay" class="alert alert-info mt-3 d-none" role="alert">
-                        **Calculated Area:** <span id="calculatedArea">0.0</span> acres
+                        Calculated Area: <span id="calculatedArea"></span> acres
                     </div>
                     
                 </div>
@@ -100,43 +100,52 @@
     </div>
 </div>
 
+<input type="hidden" id="ndvi_url_pattern" 
+    value="{% url 'farm_ndvi_explorer' farm_id=99999 %}">
+<input type="hidden" id="nutrients_url_pattern" 
+    value="{% url 'farm_soil_nutrients' farm_id=99999 %}">
+<input type="hidden" id="taxonomy_url_pattern" 
+    value="{% url 'farm_soil_taxonomic_groups' farm_id=99999 %}">
+
+
 <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title" id="successModalLabel">✅ Farm Boundary Saved!</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p class="mb-2">The boundary for **<span id="modalFarmName" class="fw-bold"></span>** has been successfully recorded.</p>
-        <p class="fw-bold">Calculated Area: <span id="modalFarmArea"></span> acres</p>
-        <hr>
-        <h6 class="mb-3">What would you like to do next?</h6>
-        
-        <div class="d-grid gap-2">
-            <a id="ndviLink" href="#" class="btn btn-primary-custom btn-lg">
-                <i class="bi bi-graph-up me-2"></i> Analyze Vegetation (NDVI Explorer)
-            </a>
-            
-            <a id="soilNutrientsLink" href="#" class="btn btn-outline-primary-custom btn-lg">
-                <i class="bi bi-droplet me-2"></i> Check Soil Nutrients
-            </a>
-            
-            <a id="soilTaxonomyLink" href="#" class="btn btn-outline-primary-custom btn-lg">
-                <i class="bi bi-database me-2"></i> View Soil Taxonomy
-            </a>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="successModalLabel">✅ Farm Boundary Saved</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">The boundary for <span id="modalFarmName" class="fw-bold"></span> has been successfully recorded.</p>
+                <p class="fw-bold">Calculated Area: <span id="modalFarmArea"></span> acres</p>
+                <hr>
+                <h6 class="mb-3">What would you like to do next?</h6>
+                
+                <div class="d-grid gap-2">
+                    <a id="ndviLink" href="#" class="btn btn-primary-custom btn-lg">
+                        <i class="bi bi-graph-up me-2"></i> Analyze Vegetation (NDVI Explorer)
+                    </a>
+                    
+                    <a id="soilNutrientsLink" href="#" class="btn btn-outline-primary-custom btn-lg">
+                        <i class="bi bi-droplet me-2"></i> Check Soil Nutrients
+                    </a>
+                    
+                    <a id="soilTaxonomyLink" href="#" class="btn btn-outline-primary-custom btn-lg">
+                        <i class="bi bi-database me-2"></i> View Soil Taxonomy
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
     </div>
-  </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.3/src/leaflet.geometryutil.min.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
     <script src="{% static 'js/boundary_mapping.js' %}"></script>
 {% endblock %}
