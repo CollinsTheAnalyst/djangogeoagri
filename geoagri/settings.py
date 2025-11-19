@@ -15,6 +15,10 @@ import platform
 import ctypes.util
 from .jazzmin_config import JAZZMIN_SETTINGS, JAZZMIN_UI_TWEAKS
 
+# --- NEW IMPORTS FOR DEPLOYMENT ---
+import dj_database_url
+# --- END NEW IMPORTS ---
+
 
 if platform.system() == "Windows":
     # Local (conda)
@@ -41,7 +45,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ALLOWED_HOSTS = ["*"]
 
 
-
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -55,13 +58,11 @@ INSTALLED_APPS = [
     'agrigeo',
     'accounts',
     "django_plotly_dash.apps.DjangoPlotlyDashConfig",
-    "dpd_static_support",  
+    "dpd_static_support",
     "channels",
     'blog',
     'django_ckeditor_5',
 ]
-
-
 
 
 MIDDLEWARE = [
@@ -104,13 +105,13 @@ CHANNEL_LAYERS = {
 }
 
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
+# ----------------------------------------------------
+# Database (Revised for Choreo/DATABASE_URL support)
+# ----------------------------------------------------
 from decouple import config
 
-DATABASES = {
+# 1. Start with the local/default database configuration reading individual ENV variables
+_default_db_config = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': config('DB_NAME'),
@@ -121,12 +122,24 @@ DATABASES = {
     }
 }
 
+# 2. PRODUCTION OVERRIDE: Use DATABASE_URL if provided by the environment (Choreo)
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True  # Recommended for secure cloud connections
+        )
+    }
+    # CRITICAL: Force the engine to use GeoDjango's PostGIS backend after parsing the URL
+    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+else:
+    # Fallback to the original settings for local development
+    DATABASES = _default_db_config
+
+
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
-
-
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -226,16 +239,13 @@ CKEDITOR_5_CONFIGS = {
 }
 
 # =======================================================
-# 🚀 FIX: DJANGO PLOTLY DASH CONFIGURATION (to eliminate Bootstrap conflict)
+# 🚀 DJANGO PLOTLY DASH CONFIGURATION (for Bootstrap compatibility)
 # =======================================================
-# We explicitly tell DPD to use external assets (our main Bootstrap 5 CDN) 
-# and ignore its conflicting internal assets which break the modal.
 DJANGO_PLOTLY_DASH = {
     'served_externally': True,
     'external_js': None,
     'external_css': None,
     'external_dependencies': {
-        # This block is crucial for ensuring the conflict is suppressed.
         'jquery_support': False,
         'bootstrap_css': None,
         'bootstrap_js': None

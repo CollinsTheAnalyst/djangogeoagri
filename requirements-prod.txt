@@ -38,6 +38,7 @@ psycopg2-binary>=2.9,<3
 # Utilities
 requests>=2.32,<3
 python-decouple>=3.8,<4
+dj-database-url
 
 # Optional for TensorFlow/ML (commented out if not needed)
 # tensorflow>=2.12,<2.13
