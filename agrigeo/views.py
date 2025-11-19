@@ -15,7 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.templatetags.static import static
 from django.conf import settings
-from django.core.mail import send_mail # Assuming this is available, if not, remove/comment out the import and contact logic.
+from django.core.mail import send_mail 
 
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -288,27 +288,26 @@ def save_farm_boundary(request):
     """
     Save farm boundary from AJAX request.
     
-    FIX: This function now correctly returns a JSON response with the farm_id, 
-    and it only attempts to save fields ('owner', 'name', 'boundary') present 
-    in the FarmBoundary model.
+    FIX: This function now returns a JSON response and returns all client-side fields 
+         (name, area, location, county) for modal display.
     """
     if request.method != "POST":
         return JsonResponse({"status": "failed", "error": "POST request required."}, status=405)
 
     try:
-        # 1. Capture data using keys matching the formData.append calls in boundary_mapping.js
+        # 1. Capture data from POST request (all fields sent by JS form)
         farm_name = request.POST.get("name") 
         boundary_geojson_str = request.POST.get("geometry")
         
-        # Capture fields not saved to model but needed for client-side response
+        # Capture client-side fields for modal display (these are not in the FarmBoundary model)
         location_val = request.POST.get("location") 
         area_val = request.POST.get("area") 
+        county_val = request.POST.get("county") 
         
         if not all([farm_name, boundary_geojson_str]):
             return JsonResponse({"status": "failed", "error": "Missing required data (Farm Name or Boundary Geometry)."}, status=400)
 
         # 2. Parse GeoJSON
-        # GEOSGeometry can load the GeoJSON geometry string directly.
         geom = GEOSGeometry(boundary_geojson_str)
         
         # 3. Save to database - ONLY using fields defined in FarmBoundary model
@@ -318,12 +317,14 @@ def save_farm_boundary(request):
             boundary=geom,
         )
         
-        # 4. Success: Return JSON response with the newly created ID
+        # 4. Success: Return JSON response with all necessary fields for the modal
         return JsonResponse({
             "status": "success", 
             "message": "Farm boundary saved successfully.",
-            "farm_id": farm_boundary.id, # CRITICAL: This is used by JS for modal links
-            "area": area_val 
+            "farm_id": farm_boundary.id,
+            "area": area_val,
+            "county": county_val,       
+            "location_name": location_val 
         })
         
     except Exception as e:
@@ -353,7 +354,9 @@ def save_boundary(request):
 # ===========================
 @login_required
 def get_counties(request):
+    """API to fetch list of county names for dropdown."""
     try:
+        # Uses Earth Engine FeatureCollection
         kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
         county_names = kenya_counties.aggregate_array("COUNTY").distinct().getInfo()
         return JsonResponse({"counties": county_names})
@@ -363,10 +366,12 @@ def get_counties(request):
 
 @login_required
 def get_county_geometry(request):
+    """API to fetch GeoJSON geometry for a selected county."""
     county_name = request.GET.get("county")
     if not county_name:
         return JsonResponse({"error": "County name not provided"}, status=400)
     try:
+        # Filters GEE collection to get the boundary geometry
         kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
         county_feature = kenya_counties.filter(ee.Filter.eq("COUNTY", county_name)).first()
         if not county_feature:

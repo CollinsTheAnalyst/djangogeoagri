@@ -62,6 +62,14 @@
                 <div class="card-body">
                     <form id="farmBoundaryForm" method="POST" action="{% url 'save_farm_boundary' %}">
                         {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="county-select" class="form-label">Select County</label>
+                            <select id="county-select" class="form-select" name="county">
+                                <option value="">Select County (Optional) --</option>
+                                </select>
+                        </div>
+                        
                         <div class="mb-3">
                             <label for="farm_name" class="form-label">Farm Name</label>
                             <input type="text" class="form-control" id="farm_name" name="name" placeholder="Block 1" required>
@@ -107,6 +115,7 @@
 <input type="hidden" id="taxonomy_url_pattern" 
     value="{% url 'farm_soil_taxonomic_groups' farm_id=99999 %}">
 
+{% endblock %} 
 
 <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -117,7 +126,7 @@
             </div>
             <div class="modal-body">
                 <p class="mb-2">The boundary for <span id="modalFarmName" class="fw-bold"></span> has been successfully recorded.</p>
-                <p class="fw-bold">Calculated Area: <span id="modalFarmArea"></span> acres</p>
+                <p class="fw-bold">Calculated Area: <span id="modalFarmArea"></span></p>
                 <hr>
                 <h6 class="mb-3">What would you like to do next?</h6>
                 
@@ -141,7 +150,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.3/src/leaflet.geometryutil.min.js"></script>
