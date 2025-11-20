@@ -1,9 +1,7 @@
 # 1. Base Image
 FROM python:3.11-slim-bookworm
-
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-
 WORKDIR /app
 
 # System dependencies (requires root)
@@ -30,15 +28,14 @@ RUN groupadd -g 10001 geoagriuser \
     && useradd -u 10001 -g geoagriuser -m geoagriuser \
     && chown -R 10001:10001 /app
 
-# Collect static files as root (optional)
+# Collect static files as root
 RUN python manage.py collectstatic --noinput
 
 # Fix permissions again
 RUN chown -R 10001:10001 /app
 
-# Switch to non-root user using numeric UID
-USER 10001:10001
+# Switch to non-root user using numeric UID only
+USER 10001
 
 EXPOSE 8080
-
 CMD ["gunicorn", "geoagri.wsgi:application", "--bind", "0.0.0.0:$PORT"]
