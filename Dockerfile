@@ -5,9 +5,8 @@ FROM python:3.11-slim-bookworm
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-# -----------------------------------------------
 # 🚀 SECURITY FIX: Create Non-Root User (Fixes CKV_DOCKER_3)
-# -----------------------------------------------
+
 # 1. Create a non-root user and group for security
 RUN groupadd -r geoagriuser && useradd --no-log-init -r -g geoagriuser geoagriuser
 
@@ -15,7 +14,6 @@ RUN groupadd -r geoagriuser && useradd --no-log-init -r -g geoagriuser geoagrius
 WORKDIR /app
 
 # 2. Install Geospatial System Dependencies
-# This section installs GDAL/GEOS required for GeoDjango
 RUN apt-get update && apt-get install -y \
     gdal-bin \
     libgdal-dev \
@@ -43,8 +41,8 @@ RUN chown -R geoagriuser:geoagriuser /app
 # Running as root here is acceptable if permissions are fixed above
 RUN python manage.py collectstatic --noinput
 
-# -----------------------------------------------
-# 🚀 SECURITY FIX: Switch to Non-Root User
+
+# SECURITY FIX: Switch to Non-Root User
 # -----------------------------------------------
 # Switch to the non-root user *before* running the application
 USER geoagriuser
