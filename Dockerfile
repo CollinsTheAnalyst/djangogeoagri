@@ -24,18 +24,18 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 COPY . /app
 
 # Create non-root user with explicit UID/GID
-RUN groupadd -g 10001 geoagriuser \
-    && useradd -u 10001 -g geoagriuser -m geoagriuser \
-    && chown -R 10001:10001 /app
+RUN groupadd -g 10014 geoagriuser \
+    && useradd -u 10014 -g geoagriuser -m geoagriuser \
+    && chown -R 10014:10014 /app
 
 # Collect static files as root
 RUN python manage.py collectstatic --noinput
 
 # Fix permissions again
-RUN chown -R 10001:10001 /app
+RUN chown -R 10014:10014 /app
 
-# Switch to non-root user using numeric UID only
-USER 10001
+# Switch to non-root user
+USER 10014
 
 EXPOSE 8080
 CMD ["sh", "-c", "gunicorn geoagri.wsgi:application --bind 0.0.0.0:${PORT:-8080}"]
