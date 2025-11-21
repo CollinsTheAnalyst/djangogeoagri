@@ -39,7 +39,7 @@ COPY . /app
 # They are safely overwritten by Choreo secrets during runtime.
 ENV DB_NAME=build_placeholder
 ENV DB_USER=placeholder
-ENV ENV DB_PASSWORD=placeholder
+ENV DB_PASSWORD=placeholder 
 ENV DB_HOST=localhost
 # -----------------------------------------------
 
