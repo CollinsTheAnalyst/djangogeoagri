@@ -1,7 +1,7 @@
 # ----------------------------------------------------
-# 🚨 CACHE BUSTING LINE (CHANGE VALUE ON FAILURE) 🚨
-# This line is necessary to force Choreo's build cache to refresh.
-ARG BUILD_DATE=20251121c
+# 🚨 CACHE BUSTING LINE (CHANGE VALUE TO TODAY'S DATE OR A RANDOM NUMBER) 🚨
+# This line forces the build system to re-read the file and apply the security fix.
+ARG BUILD_DATE=20251121d 
 # ----------------------------------------------------
 
 # 1. Base Image
@@ -42,20 +42,24 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 COPY . /app
 
 # -----------------------------------------------
-# 🚀 SECURITY FIX: Create User & Switch (Fixes CKV_DOCKER_3)
+# 🚀 SECURITY FIX: Create User (Compliant UID 10001)
 # -----------------------------------------------
-# 1. Create a non-root user
-RUN groupadd -r geoagriuser && useradd --no-log-init -r -g geoagriuser geoagriuser
+# Create user with explicit UID and GID 10001 (REQUIRED by CKV_CHOREO_1)
+RUN groupadd -r geoagriuser -g 10001 && useradd -r -u 10001 -g geoagriuser geoagriuser
 
-# 2. Ensure non-root user owns the files (CRITICAL for static files and writing to /app)
-RUN chown -R geoagriuser:geoagriuser /app
+# Ensure the application user owns the files/folders it will write to
+# We use the numerical ID here
+RUN chown -R 10001:10001 /app
 
-# 3. Collect Static Files (Gathers assets for Whitenoise serving)
-# Runs successfully now that ownership is granted above
+# Collect Static Files (Gathers assets for Whitenoise serving)
+# This runs as root, but permissions are fixed above
 RUN python manage.py collectstatic --noinput
 
-# 4. Switch to non-root user *before* running the application
-USER geoagriuser
+# -----------------------------------------------
+# 🚀 FINAL SECURITY STEP: Switch User
+# -----------------------------------------------
+# Switch to the numerical UID 10001 *before* running the application
+USER 10001
 # -----------------------------------------------
 
 # 5. Define Startup Command
