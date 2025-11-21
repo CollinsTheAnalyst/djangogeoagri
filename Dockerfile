@@ -1,7 +1,6 @@
 # ----------------------------------------------------
-# 🚨 CACHE BUSTING LINE (CHANGE VALUE TO TODAY'S DATE OR A RANDOM NUMBER) 🚨
-# This line forces the build system to re-read the file and apply the security fix.
-ARG BUILD_DATE=20251121d 
+# 🚨 CACHE BUSTING LINE (CHANGE VALUE E.G., 20251121f) 🚨
+ARG BUILD_DATE=20251121f
 # ----------------------------------------------------
 
 # 1. Base Image
@@ -11,10 +10,7 @@ FROM python:3.11-slim-bookworm
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-# -----------------------------------------------
-# 2. Install Geospatial System Dependencies (Runs as root)
-# -----------------------------------------------
-# This installs GDAL, GEOS, PROJ, and build essentials required for GeoDjango.
+# 2. Install Geospatial System Dependencies
 RUN apt-get update && apt-get install -y \
     gdal-bin \
     libgdal-dev \
@@ -27,11 +23,7 @@ RUN apt-get update && apt-get install -y \
 # CRITICAL: Apply Symlink Fix for GDAL linking
 RUN ln -s /usr/lib/x86_64-linux-gnu/libgdal.so /usr/lib/libgdal.so
 
-# -----------------------------------------------
 # 3. Setup Application Directory & Install Python
-# -----------------------------------------------
-
-# Set the working directory
 WORKDIR /app
 
 # Install dependencies
@@ -42,23 +34,26 @@ RUN pip install --no-cache-dir -r requirements-prod.txt
 COPY . /app
 
 # -----------------------------------------------
-# 🚀 SECURITY FIX: Create User (Compliant UID 10001)
+# 🚀 CRITICAL BUILD FIX: Set dummy DB values for collectstatic
+# These values allow settings.py to load without crashing decouple.
+# They are safely overwritten by Choreo secrets during runtime.
+ENV DB_NAME=build_placeholder
+ENV DB_USER=placeholder
+ENV ENV DB_PASSWORD=placeholder
+ENV DB_HOST=localhost
 # -----------------------------------------------
-# Create user with explicit UID and GID 10001 (REQUIRED by CKV_CHOREO_1)
-RUN groupadd -r geoagriuser -g 10001 && useradd -r -u 10001 -g geoagriuser geoagriuser
 
-# Ensure the application user owns the files/folders it will write to
-# We use the numerical ID here
-RUN chown -R 10001:10001 /app
-
-# Collect Static Files (Gathers assets for Whitenoise serving)
-# This runs as root, but permissions are fixed above
+# 4. Collect Static Files (This step will now succeed)
 RUN python manage.py collectstatic --noinput
 
 # -----------------------------------------------
-# 🚀 FINAL SECURITY STEP: Switch User
+# 🚀 SECURITY FIX: Create User (Compliant UID 10001)
 # -----------------------------------------------
-# Switch to the numerical UID 10001 *before* running the application
+# Create user with explicit UID and GID 10001 (Fixes CKV_CHOREO_1)
+RUN groupadd -r geoagriuser -g 10001 && useradd -r -u 10001 -g geoagriuser geoagriuser
+RUN chown -R 10001:10001 /app
+
+# Switch to the required non-root user
 USER 10001
 # -----------------------------------------------
 
