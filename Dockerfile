@@ -43,6 +43,9 @@ ENV DB_PASSWORD=placeholder
 ENV DB_HOST=localhost
 # -----------------------------------------------
 
+ENV SECRET_KEY=build_secret_key_only
+
+
 # 4. Collect Static Files (This step will now succeed)
 RUN python manage.py collectstatic --noinput
 
