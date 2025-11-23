@@ -45,6 +45,9 @@ ENV DB_HOST=localhost
 
 ENV SECRET_KEY=build_secret_key_only
 
+ENV EMAIL_HOST_USER=build_email_placeholder
+ENV EMAIL_HOST_PASSWORD=build_email_password_placeholder
+
 
 # 4. Collect Static Files (This step will now succeed)
 RUN python manage.py collectstatic --noinput
