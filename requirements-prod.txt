@@ -16,14 +16,14 @@ django-jazzmin>=3.0.0
 
 # Dashboards & Visualization
 django-plotly-dash>=2.3.0
-dpd-static-support>=0.0.5  # <--- NEW: Fixes 'No module named dpd_static_support'
+dpd-static-support>=0.0.5
 
 # WebSockets & Async
 channels>=4.0.0
 daphne>=4.0.0
 
-# Rich Text Editing
-django-ckeditor>=6.7.0
+# Rich Text Editing (Updated to CKEditor 5)
+django-ckeditor-5>=0.2.0
 # -----------------------------------
 
 # Django GIS & mapping (keep minimal)
