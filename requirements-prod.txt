@@ -10,13 +10,21 @@ gunicorn>=23.0,<24
 whitenoise>=6.11,<7
 sqlparse>=0.5.3,<0.6
 
-# --- 🚀 MISSING DEPENDENCIES (CRITICAL FIX) ---
+# --- 🚀 MISSING DEPENDENCIES FIX ---
+# UI & Admin Interface
 django-jazzmin>=3.0.0
+
+# Dashboards & Visualization
 django-plotly-dash>=2.3.0
+dpd-static-support>=0.0.5  # <--- NEW: Fixes 'No module named dpd_static_support'
+
+# WebSockets & Async
 channels>=4.0.0
 daphne>=4.0.0
+
+# Rich Text Editing
 django-ckeditor>=6.7.0
-# ----------------------------------------------
+# -----------------------------------
 
 # Django GIS & mapping (keep minimal)
 django-geojson>=4.2,<5
