@@ -10,20 +10,13 @@ gunicorn>=23.0,<24
 whitenoise>=6.11,<7
 sqlparse>=0.5.3,<0.6
 
-# --- 🚀 MISSING DEPENDENCIES ADDED HERE ---
-# UI & Admin Interface (Fixes 'No module named jazzmin')
+# --- 🚀 MISSING DEPENDENCIES (CRITICAL FIX) ---
 django-jazzmin>=3.0.0
-
-# Dashboards & Visualization (Fixes 'django_plotly_dash' errors)
 django-plotly-dash>=2.3.0
-
-# WebSockets & Async (Fixes 'channels' errors)
 channels>=4.0.0
 daphne>=4.0.0
-
-# Rich Text Editing (Fixes 'ckeditor' errors)
 django-ckeditor>=6.7.0
-# ------------------------------------------
+# ----------------------------------------------
 
 # Django GIS & mapping (keep minimal)
 django-geojson>=4.2,<5
