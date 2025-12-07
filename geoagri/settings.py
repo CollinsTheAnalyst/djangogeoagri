@@ -33,6 +33,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = ["*"]
 
+# Add the Choreo domain to trusted origins for CSRF
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.choreoapps.dev',  # Covers standard Choreo domains
+   
+]
+
 
 INSTALLED_APPS = [
     'jazzmin',
