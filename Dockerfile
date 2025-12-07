@@ -65,4 +65,5 @@ USER 10001
 
 # 5. Define Startup Command
 EXPOSE 8080
-CMD gunicorn geoagri.wsgi:application --bind 0.0.0.0:$PORT
+# 🚀 FIX: Run migrations AND hardcode port 8080 to satisfy Choreo
+CMD python manage.py migrate && gunicorn geoagri.wsgi:application --bind 0.0.0.0:8080
