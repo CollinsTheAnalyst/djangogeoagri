@@ -1,79 +1,96 @@
-console.log("plant_disease.js loaded ✅");
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("plant_disease.js loaded ✅");
 
-// Grab elements
-const fileInput = document.getElementById("file-input");
-const previewImage = document.getElementById("preview-image");
-const predictBtn = document.querySelector(".predict-btn");
-const cropSelect = document.getElementById("crop-select");
+    // 1. Grab Elements
+    const fileInput = document.getElementById("file-input");
+    const previewImage = document.getElementById("preview-image");
+    const predictBtn = document.getElementById("predict-btn") || document.querySelector(".predict-btn"); 
+    const cropSelect = document.getElementById("crop-select");
 
-// Results placeholders
-const diseaseEl = document.getElementById("disease-result");
-const confidenceEl = document.getElementById("confidence-result");
-const stageEl = document.getElementById("stage-result");
-const treatmentEl = document.getElementById("treatment-result");
+    // 2. Result Placeholders
+    const diseaseEl = document.getElementById("disease-result");
+    const confidenceEl = document.getElementById("confidence-result");
+    const stageEl = document.getElementById("stage-result");
+    const treatmentEl = document.getElementById("treatment-result");
+    
+    const causesEl = document.getElementById("causes-result");
+    const chemicalEl = document.getElementById("chemical-result");
 
-// Preview uploaded image
-if (fileInput) {
-    fileInput.addEventListener("change", function () {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                previewImage.src = e.target.result; // replace preview
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-}
-
-// Predict button logic
-if (predictBtn) {
-    predictBtn.addEventListener("click", async function () {
-    if (!fileInput.files || fileInput.files.length === 0) {
-        alert("Please upload an image first.");
-        return;
+    // 3. Image Preview Logic
+    if (fileInput) {
+        fileInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     }
 
-    const file = fileInput.files[0];
-    const crop = cropSelect.value;
+    // 4. Predict Button Logic
+    if (predictBtn) {
+        predictBtn.addEventListener("click", async function () {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select an image first.");
+                return;
+            }
 
-    // DEBUG: Check file and crop
-    console.log("Selected crop:", crop);
-    console.log("File to upload:", file);
+            const file = fileInput.files[0];
+            const crop = cropSelect.value;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("crop", crop);
+            // Prepare Form Data
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("crop", crop);
 
-    // Show loading state
-    predictBtn.disabled = true;
-    predictBtn.innerText = "Predicting...";
-    diseaseEl.innerText = "Detecting...";
+            // ============================================================
+            // 🟢 START ANIMATION (The part you mentioned)
+            // ============================================================
+            predictBtn.disabled = true;
+            predictBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing...';
+            
+            // Set temporary status messages
+            diseaseEl.innerText = "Consulting AI...";
+            if(causesEl) causesEl.innerText = "Analyzing symptoms...";
+            if(chemicalEl) chemicalEl.innerText = "Checking PCPB Database...";
 
-    try {
-        const resp = await fetch("/predict/", { method: "POST", body: formData });
+            try {
+                // Send Request
+                const resp = await fetch("/predict/", { method: "POST", body: formData });
 
-        // DEBUG: Check HTTP status
-        console.log("Response status:", resp.status);
+                if (!resp.ok) {
+                    throw new Error(`Server Error: ${resp.status}`);
+                }
 
-        if (!resp.ok) throw new Error("Server error");
+                const data = await resp.json();
+                console.log("AI Response:", data);
 
-        const data = await resp.json();
-        console.log("Prediction response:", data);
+                // Update UI with Data
+                diseaseEl.innerText = data.prediction || "Unknown";
+                confidenceEl.innerText = data.confidence
+                    ? (data.confidence * 100).toFixed(1) + "%"
+                    : "---";
+                stageEl.innerText = data.stage || "N/A";
+                treatmentEl.innerText = data.treatment || "No cultural advice found.";
 
-        diseaseEl.innerText = data.prediction || "Unknown";
-        confidenceEl.innerText = data.confidence
-            ? (data.confidence * 100).toFixed(2) + "%"
-            : "---";
-        stageEl.innerText = data.stage || "N/A";
-        treatmentEl.innerText = data.treatment || "N/A";
-    } catch (err) {
-        console.error("Prediction failed:", err);
-        alert("Prediction failed. Check console for details.");
-    } finally {
-        predictBtn.disabled = false;
-        predictBtn.innerText = "🔍 Predict";
+                if (causesEl) causesEl.innerText = data.causes || "Information not available.";
+                if (chemicalEl) chemicalEl.innerText = data.chemical_advice || "No chemical advice found.";
+
+            } catch (err) {
+                console.error("Prediction failed:", err);
+                diseaseEl.innerText = "Analysis Failed";
+                treatmentEl.innerText = "Connection failed. Please check your internet.";
+                if(chemicalEl) chemicalEl.innerText = "---";
+            } finally {
+                // ============================================================
+                // 🔴 STOP ANIMATION (This runs when it's done)
+                // ============================================================
+                predictBtn.disabled = false;
+                predictBtn.innerHTML = '🔍 Diagnose Now'; 
+            }
+        });
     }
 });
-
-}

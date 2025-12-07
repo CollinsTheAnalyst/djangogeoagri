@@ -101,26 +101,30 @@ CHANNEL_LAYERS = {
 # 1. Check for the cloud-provided DATABASE_URL environment variable first.
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            conn_health_checks=True,
-            ssl_require=True  # Recommended for secure cloud connections
-        )
-    }
+    'default': dj_database_url.parse(
+        config('DATABASE_URL'),
+        engine='django.contrib.gis.db.backends.postgis',
+        conn_max_age=600,
+        ssl_require=True 
+    )
+}
     # CRITICAL: Re-apply the GeoDjango PostGIS engine after parsing the URL
     DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 else:
     # 2. Fallback: Use the original decouple configuration for local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST', default='localhost'),
-            'PORT': config('DB_PORT', default='5432'),
-        }
+   DATABASES = {
+    'default': {
+        # CRITICAL: This must be the PostGIS engine, not dummy
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        
+        # Ensure these keys match your .env file
+        'NAME': config('DB_NAME', default='postgres'),
+        'USER': config('DB_USER', default=config('SQL_USER', default='postgres')), 
+        'PASSWORD': config('DB_PASSWORD', default=config('SQL_PASSWORD', default='')),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
     }
+}
 
 
 SECRET_KEY = config('SECRET_KEY')
@@ -171,7 +175,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # separate folder
 
 # Additional folders where Django will look for static files in development
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # your dev static files (js, css, images)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestFilesStorage' # Changed to CompressedManifestFilesStorage
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # settings.py
@@ -259,3 +263,6 @@ DJANGO_PLOTLY_DASH = {
         'bootstrap_js': None
     }
 }
+
+
+GEMINI_API_KEY = config('GEMINI_API_KEY', default=None)

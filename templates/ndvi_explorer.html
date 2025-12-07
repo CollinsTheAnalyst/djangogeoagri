@@ -1,61 +1,98 @@
 {% extends 'base.html' %}
 {% load static %}
 
-
 {% block title %}NDVI Explorer{% endblock %}
 
 {% block content %}
-
-<!-- Main Panel -->
-<div id="main-panel" style="margin-left: 20px; margin-right: 20px; position: relative;">
-
-    <!-- Map Container -->
-    <div id="map"></div>
-
-    <!-- Chart Panel -->
-    <div id="chart-panel" class="card shadow-sm">
-        <h5 class="card-title">NDVI/EVI Time Series</h5>
-        <canvas id="ndvi-chart"></canvas>
-
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-10">
+            <h1 class="display-6 fw-bold text-dark">Vegetation Health Tracker</h1>
+            <p class="text-muted">
+                Analyze historical vegetation indices (NDVI/EVI) to monitor crop health and stress levels over time.
+            </p>
+        </div>
     </div>
-</div>
 
-<!-- Controls Panel -->
-<div id="controls-panel" class="card shadow-lg">
-    <div class="card-body text-light d-flex flex-column h-100">
-        <h5 class="card-title text-center">Select Panel</h5>
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 h-100 rounded-3">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-success mb-0"><i class="fas fa-sliders-h me-2"></i>Analysis Controls</h5>
+                </div>
+                <div class="card-body px-4 pb-4 d-flex flex-column">
+                    
+                    <div class="mb-4">
+                        <label for="county-select" class="form-label fw-bold text-secondary small text-uppercase">Region</label>
+                        <select id="county-select" class="form-select border-success shadow-none">
+                            <option value="">-- Select County --</option>
+                        </select>
+                    </div>
 
-        <div class="mb-3">
-            <label for="county-select" class="form-label">Select County</label>
-            <select id="county-select" class="form-select">
-                <option value="">-- Choose County --</option>
-            </select>
+                    <div class="mb-4">
+                        <label for="metric-select" class="form-label fw-bold text-secondary small text-uppercase">Index Type</label>
+                        <select id="metric-select" class="form-select border-success shadow-none">
+                            <option value="NDVI">NDVI (Vegetation Index)</option>
+                            <option value="EVI">EVI (Enhanced Index)</option>
+                        </select>
+                        <div class="form-text small">NDVI is best for general vigor; EVI corrects for canopy background.</div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="start-date" class="form-label fw-bold text-secondary small text-uppercase">Time Range</label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text bg-green-light border-success text-success"><i class="fas fa-calendar-alt"></i></span>
+                            <input type="date" id="start-date" class="form-control border-success shadow-none">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-green-light border-success text-success"><i class="fas fa-flag-checkered"></i></span>
+                            <input type="date" id="end-date" class="form-control border-success shadow-none">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border border-success p-2 mt-4 mb-4 rounded-3 text-center">
+                        <small class="text-secondary">
+                            <i class="fas fa-mouse-pointer me-1 text-success"></i> 
+                            Click a point on the map to analyze.
+                        </small>
+                    </div>
+
+                    <div class="mt-auto">
+                        <button id="plot-btn" class="btn btn-lg w-100 text-white fw-bold shadow-sm mb-2" style="background-color: #60c844;">
+                            <i class="fas fa-chart-line me-2"></i> Plot Data
+                        </button>
+                        <button id="download-btn" class="btn btn-outline-success w-100 fw-bold" disabled>
+                            <i class="fas fa-download me-2"></i> Export CSV
+                        </button>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="metric-select" class="form-label">Vegetation Index</label>
-            <select id="metric-select" class="form-select">
-                <option value="NDVI">NDVI</option>
-                <option value="EVI">EVI</option>
-            </select>
-        </div>
+        <div class="col-lg-9">
+            
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-header bg-white border-0 pt-3 px-4">
+                    <h6 class="fw-bold text-dark"><i class="fas fa-map me-2 text-success"></i>Location Selector</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 450px; width: 100%; border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem;"></div>
+                </div>
+            </div>
 
-        <div class="mb-3">
-            <label for="start-date" class="form-label">Start Date</label>
-            <input type="date" id="start-date" class="form-control">
-        </div>
+            <div class="card shadow-sm border-0 rounded-3 border-start border-5 border-success">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-area me-2 text-success"></i>Time Series Analysis</h5>
+                    <span class="badge bg-green-light text-success border border-success">Live Data</span>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="chart-container" style="position: relative; height: 350px; width: 100%;">
+                        <canvas id="ndvi-chart"></canvas>
+                    </div>
+                </div>
+            </div>
 
-        <div class="mb-3">
-            <label for="end-date" class="form-label">End Date</label>
-            <input type="date" id="end-date" class="form-control">
-        </div>
-
-        <p class="small text-white">Click on the map to plot NDVI/EVI for that location.</p>
-
-        <!-- Buttons now inside card-body -->
-        <div class="mt-auto">
-            <button id="plot-btn" class="btn btn-success w-100 mb-2">📈 Plot Time Series</button>
-            <button id="download-btn" class="btn btn-outline-light w-100" disabled>⬇ Download Data</button>
         </div>
     </div>
 </div>
@@ -63,65 +100,36 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
 <style>
-/* Controls Panel */
-#controls-panel {
-    position: absolute;
-    top: 100px;
-    right: 30px;
-    height: 700px;
-    width: 350px;
-    background: rgba(33, 37, 41, 0.95);
-    border-radius: 20px;
-    z-index: 1000;
-}
-#controls-panel .form-label,
-#controls-panel .card-title { color: #f8f9fa; }
-#controls-panel .form-select,
-#controls-panel .form-control { background-color: #212529; color: #f8f9fa; border: 1px solid #495057; }
-#controls-panel .form-select:focus,
-#controls-panel .form-control:focus { background-color: #2c3034; color: #fff; border-color: #0d6efd; box-shadow: none; }
+    /* Brand Colors */
+    .bg-green-light { background-color: #f0fff4; }
+    
+    /* Input Styling */
+    .form-control:focus, .form-select:focus {
+        border-color: #60c844;
+        box-shadow: 0 0 0 0.25rem rgba(96, 200, 68, 0.25);
+    }
 
-/* Map */
-#map {
-    border-radius: 8px;
-    height: 500px;
-    width: calc(100% - 380px);  /* 350px panel + 30px margin */
-    z-index: 1;
-}
+    /* Button Hover */
+    #plot-btn:hover {
+        background-color: #4caf33 !important;
+        transform: translateY(-1px);
+    }
 
-/* Chart Panel */
-#chart-panel { 
-    background: rgba(255,255,255,0.95);
-    width: calc(100% - 380px); 
-    border-radius: 15px; 
-    padding: 15px; 
-    margin-top: 20px;
-}
-
-/* Chart */
-#ndvi-chart {
-    height: 350px !important;
-    width: 100% !important;
-}
+    /* Map Styling */
+    #map {
+        z-index: 1;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
-
-<!-- Bootstrap Bundle (with Popper) -->
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
-
-
-<!-- Leaflet -->
 <script src="{% static 'js/leaflet.js' %}"></script>
 
-<!-- Your NDVI Explorer logic -->
 <script src="{% static 'js/ndvi_explorer.js' %}"></script>
-
 {% endblock %}

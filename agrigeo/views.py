@@ -1,10 +1,10 @@
-# views.py
+# agrigeo/views.py
 
 import json
 import os
-import numpy as np
 import pandas as pd
 import requests
+import io  # Added for image handling
 from io import BytesIO
 
 from django.shortcuts import render, redirect
@@ -16,14 +16,14 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.templatetags.static import static
 from django.conf import settings
 from django.core.mail import send_mail 
-
 from django.core.serializers.json import DjangoJSONEncoder
-
 from django.contrib.gis.geos import GEOSGeometry
 
-# NOTE: Importing load_model and image might need a check on the TensorFlow environment
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
+# ===========================
+# AI & Image Processing Imports
+# ===========================
+import google.generativeai as genai
+from PIL import Image
 
 import ee
 
@@ -33,6 +33,16 @@ from .legend import soil_code_guide
 
 from django.http import FileResponse, Http404
 from .models import CropApplication, Crop
+
+
+# ===========================
+# Initialize Gemini AI
+# ===========================
+# Check if key exists to prevent crash
+if hasattr(settings, 'GEMINI_API_KEY') and settings.GEMINI_API_KEY:
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+else:
+    print("⚠️ GEMINI_API_KEY not found in settings. AI features will not work.")
 
 
 # ===========================
@@ -64,7 +74,6 @@ SOIL_REPORTS = {
     "To": "Orthic Andosols.pdf",
     "Of": "Orthic Ferralsols.pdf",
     "Zo": "Orthic Solonchanks.pdf",
-    "Fp": "plinthic Ferralsols.pdf",
     "Re": "Eutric Regosols.pdf",
     "G": "GLEYSOLS.pdf",
     "I": "Lithosols.pdf",
@@ -85,33 +94,6 @@ try:
     ee.Initialize(project="ee-collinsmwiti98")
 except Exception as e:
     print("❌ Error initializing Earth Engine:", e)
-
-
-# ===========================
-# Load Plant Disease Models
-# ===========================
-MODEL_DIR = os.path.join(settings.BASE_DIR, "agrigeo", "models")
-
-MODEL_FILES = {
-    "potato": {"file": "potato_2.12.h5", "input_size": (256, 256)},
-    "maize": {"file": "Maize_disease_model_2.20.h5", "input_size": (224, 224)},
-    "wheat": {"file": "Wheat_disease_model_2.20.h5", "input_size": (224, 224)},
-    "tomato": {"file": "Tomato_disease_model_2.20.h5", "input_size": (224, 224)},
-}
-
-MODELS = {}
-for crop_name, info in MODEL_FILES.items():
-    path = os.path.join(MODEL_DIR, info["file"])
-    try:
-        model = load_model(path, compile=False)
-        MODELS[crop_name] = {
-            "model": model,
-            "input_size": info["input_size"]
-        }
-        print(f"✅ {crop_name} model loaded from {info['file']} with input size {info['input_size']}")
-    except Exception as e:
-        MODELS[crop_name] = None
-        print(f"❌ Error loading {crop_name} model: {e}")
 
 
 # ===========================
@@ -158,10 +140,6 @@ def fertilizer_recommendation(request):
         "stage_fertilizers_json": stage_fertilizers_json,
     }
     return render(request, "fertilizer_recommendation.html", context)
-
-
-# REMOVED: ndvi_selection_view, soil_nutrients_selection, soil_taxonomy_selection
-# The views below now handle both the selection (generic) and the analysis (dynamic) logic.
 
 
 # =======================================================
@@ -287,19 +265,17 @@ def plant_disease(request):
 def save_farm_boundary(request):
     """
     Save farm boundary from AJAX request.
-    
-    FIX: This function now returns a JSON response and returns all client-side fields 
-         (name, area, location, county) for modal display.
+    Returns JSON response with client-side fields for modal display.
     """
     if request.method != "POST":
         return JsonResponse({"status": "failed", "error": "POST request required."}, status=405)
 
     try:
-        # 1. Capture data from POST request (all fields sent by JS form)
+        # 1. Capture data from POST request
         farm_name = request.POST.get("name") 
         boundary_geojson_str = request.POST.get("geometry")
         
-        # Capture client-side fields for modal display (these are not in the FarmBoundary model)
+        # Capture client-side fields for modal display
         location_val = request.POST.get("location") 
         area_val = request.POST.get("area") 
         county_val = request.POST.get("county") 
@@ -310,14 +286,14 @@ def save_farm_boundary(request):
         # 2. Parse GeoJSON
         geom = GEOSGeometry(boundary_geojson_str)
         
-        # 3. Save to database - ONLY using fields defined in FarmBoundary model
+        # 3. Save to database
         farm_boundary = FarmBoundary.objects.create(
             owner=request.user,
             name=farm_name,
             boundary=geom,
         )
         
-        # 4. Success: Return JSON response with all necessary fields for the modal
+        # 4. Success: Return JSON response
         return JsonResponse({
             "status": "success", 
             "message": "Farm boundary saved successfully.",
@@ -328,7 +304,6 @@ def save_farm_boundary(request):
         })
         
     except Exception as e:
-        # Catch GEOSGeometry conversion errors or database errors
         print(f"Error saving boundary: {e}")
         return JsonResponse({"status": "failed", "error": f"Internal server error: {e}"}, status=500)
         
@@ -356,7 +331,6 @@ def save_boundary(request):
 def get_counties(request):
     """API to fetch list of county names for dropdown."""
     try:
-        # Uses Earth Engine FeatureCollection
         kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
         county_names = kenya_counties.aggregate_array("COUNTY").distinct().getInfo()
         return JsonResponse({"counties": county_names})
@@ -371,7 +345,6 @@ def get_county_geometry(request):
     if not county_name:
         return JsonResponse({"error": "County name not provided"}, status=400)
     try:
-        # Filters GEE collection to get the boundary geometry
         kenya_counties = ee.FeatureCollection("projects/ee-collinsmwiti98/assets/KenyaCounties")
         county_feature = kenya_counties.filter(ee.Filter.eq("COUNTY", county_name)).first()
         if not county_feature:
@@ -576,71 +549,113 @@ def get_clipped_soils(request):
 
 
 # ===========================
-# Plant Disease Prediction
+# AI Plant Disease Prediction (Gemini Powered)
 # ===========================
 @csrf_exempt
 def predict_view(request):
+    """
+    Analyzes a plant leaf image using Google Gemini to detect disease,
+    stage, and recommend treatment using a highly specific prompt.
+    Includes DEBUG logic to force API key loading and show errors in the UI.
+    """
     if request.method != "POST":
-        return JsonResponse({"error": "Invalid request"}, status=405)
+        return JsonResponse({"error": "Invalid request method. Use POST."}, status=405)
 
-    file: InMemoryUploadedFile = request.FILES.get("file")
-    crop = request.POST.get("crop", "").lower()
-    
-    if not file:
-        return JsonResponse({"error": "No file uploaded"}, status=400)
-    if crop not in MODELS or MODELS[crop] is None:
-        return JsonResponse({"error": f"No model available for crop '{crop}'"}, status=400)
+    # 1. Get the Data
+    uploaded_file = request.FILES.get("file")
+    crop_name = request.POST.get("crop", "plant")
 
-    model = MODELS[crop]
-
-    # Get the actual model and input size
-    model_info = MODELS[crop]        # dict with 'model' and 'input_size'
-    model = model_info['model']        # actual Keras model
-    TARGET_SIZE = model_info['input_size']     # use the stored input size
+    if not uploaded_file:
+        return JsonResponse({"error": "No image file uploaded"}, status=400)
 
     try:
-        # Load and preprocess image
-        img = image.load_img(BytesIO(file.read()), target_size=TARGET_SIZE)
-        img_array = image.img_to_array(img)
-        img_array = np.expand_dims(img_array, axis=0) / 255.0
+        # --- DEBUG START: Force Configuration Here ---
+        # This ensures we grab the key right now, even if settings loaded early.
+        api_key = getattr(settings, 'GEMINI_API_KEY', None)
+        
+        if not api_key:
+            # This specific error will now show up in your browser's "Treatment" box
+            raise ValueError("CRITICAL: GEMINI_API_KEY is missing from settings.py!")
+            
+        # Re-configure explicitly to be safe
+        genai.configure(api_key=api_key)
+        # --- DEBUG END ---
 
-        # Make prediction
-        preds = model.predict(img_array)
-        predicted_class_idx = int(np.argmax(preds[0]))
-        confidence = float(np.max(preds[0]))
+        # 2. Process Image for Gemini
+        image_bytes = uploaded_file.read()
+        img = Image.open(io.BytesIO(image_bytes))
 
-        # Class labels
-        CLASS_LABELS = {
-            "potato": ["Potato___Early_blight", "Potato___healthy", "Potato___Late_blight"],
-            "wheat": ['aphid_valid', 'black_rust_valid', 'blast_test_valid', 'brown_rust_valid',
-                      'common_root_rot_valid', 'fusarium_head_blight_valid', 'healthy_valid',
-                      'leaf_blight_valid', 'mildew_valid', 'mite_valid', 'septoria_valid',
-                      'smut_valid', 'stem_fly_valid', 'tan_spot_valid', 'yellow_rust_valid'],
-            "tomato": ['Tomato___Bacterial_spot', 'Tomato___Early_blight', 'Tomato___Late_blight',
-                        'Tomato___Leaf_Mold', 'Tomato___Septoria_leaf_spot',
-                        'Tomato___Spider_mites Two-spotted_spider_mite', 'Tomato___Target_Spot',
-                        'Tomato___Tomato_Yellow_Leaf_Curl_Virus', 'Tomato___Tomato_mosaic_virus',
-                        'Tomato___healthy'],
-            "maize": ['Cercospora_leaf_spot Gray_leaf_spot', 'Common_rust_', 'Gray_Leaf_Spot',
-                      'Healthy', 'Northern_Leaf_Blight']
-        }
+        # 3. YOUR NEW ADVANCED PROMPT
+        prompt = f"""
+        You are an expert agronomist with deep experience diagnosing foliar problems on crops. You will be given a single image of a {crop_name} leaf (front and/or back) and must produce a single JSON object as your output. Do not add any text before or after the JSON — output only valid JSON with exactly the keys and value types described below.
 
-        disease = CLASS_LABELS.get(crop, ["Unknown"])[predicted_class_idx]
+        Procedure (how to analyze the image):
+        1. Confirm the subject is a plant leaf. If not clearly a plant/leaf, return "Unknown/Not a Plant".
+        2. Visually inspect color changes, spots, lesions, margins, patterns (random, concentric, angular), distribution across the lamina and veins, necrosis vs. chlorosis, pustules, powdery growth, insect bodies or eggs, frass, webs, and signs on the leaf underside if visible.
+        3. Assess whether symptoms are biotic (fungus, bacteria, virus, insect) or abiotic (nutrient deficiency, sunburn, chemical damage, water stress). Prefer the single most likely primary diagnosis based on visible signs.
+        4. Estimate stage of attack using these categories: "Early Stage" (few localized symptoms, low coverage), "Middle Stage" (moderate spread, some tissue damage), "Late/Severe Stage" (widespread lesions, extensive necrosis or defoliation).
+        5. Formulate a concise, actionable recommendation (maximum 2 sentences). Include cultural controls and/or specific chemical class or active ingredient examples only if appropriate for the likely cause. Avoid long protocols; one targeted action and one follow-up suggestion is enough.
+        6. Provide a numeric confidence from 0.0 to 1.0 reflecting how certain you are based solely on the image (0.0 = no confidence, 1.0 = certain).
 
-        # Example stage/treatment - can be improved later
-        stage = "Early"
-        treatment = "Apply recommended fungicide"
+        Output requirements (strict):
+        - Return ONLY valid JSON.
+        - The JSON object must contain exactly these keys in any order:
+          {{
+            "prediction": string,
+            "confidence": number,
+            "stage": string,
+            "treatment": string
+          }}
+        - "prediction": the disease/pest common name or "Healthy" or "Unknown/Not a Plant".
+        - "confidence": a floating-point number between 0.0 and 1.0 (e.g., 0.85).
+        - "stage": one of "Early Stage", "Middle Stage", or "Late/Severe Stage" (or "N/A" if prediction is "Healthy" or "Unknown/Not a Plant").
+        - "treatment": a brief actionable recommendation (max two sentences). If "Healthy" or "Unknown/Not a Plant" provide an appropriate short message (e.g., "No treatment needed." or "Image unclear; retake with clearer focus and include crop context.").
 
-        return JsonResponse({
-            "prediction": disease,
-            "confidence": confidence,
-            "stage": stage,
-            "treatment": treatment,
-        })
+        Additional instructions:
+        - If multiple potential causes are visible, choose the primary cause you judge most likely and base the treatment on that.
+        - Do not include explanations, confidence rationale, step-by-step reasoning, or any extra fields.
+        - Use plain English disease/pest names (e.g., "Late blight", "Powdery mildew", "Aphid infestation", "Nutrient deficiency (Nitrate)") when possible.
+        - Keep the treatment field concise and actionable, naming a chemical class or example active ingredient only when necessary (e.g., "Apply a systemic triazole fungicide or copper spray; remove and destroy infected leaves.").
+        - If the image is ambiguous or too low-quality to diagnose, set "prediction" to "Unknown/Not a Plant" and provide a short guidance sentence in "treatment" about retaking the photo (max two sentences).
+
+        Example valid outputs:
+        {{"prediction":"Healthy","confidence":0.98,"stage":"N/A","treatment":"No treatment needed; continue routine monitoring and balanced nutrition."}}
+        {{"prediction":"Powdery mildew","confidence":0.75,"stage":"Early Stage","treatment":"Apply a contact fungicide (sulfur or potassium bicarbonate) and improve air circulation by pruning; monitor weekly for spread."}}
+
+        Now analyze the provided image of a {crop_name} leaf and output the required JSON object only.
+        """
+
+        # 4. Call Gemini Model
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        response = model.generate_content([prompt, img])
+
+        # 5. Clean and Parse Response
+        response_text = response.text.strip()
+        
+        # Remove markdown code blocks if Gemini adds them
+        if response_text.startswith("```json"):
+            response_text = response_text[7:-3].strip()
+        elif response_text.startswith("```"):
+            response_text = response_text[3:-3].strip()
+
+        data = json.loads(response_text)
+
+        # 6. Return to Frontend
+        return JsonResponse(data)
 
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
+        # --- DEBUG ERROR HANDLING ---
+        # This grabs the actual error (e.g. "403 Forbidden" or "Key missing")
+        error_message = str(e)
+        print(f"❌ DEBUG ERROR: {error_message}") # Prints to your terminal
+        
+        # Returns the error to the web page so you can read it without checking the terminal
+        return JsonResponse({
+            "prediction": "Analysis Failed",
+            "confidence": 0,
+            "stage": "See Error Below",
+            "treatment": f"ERROR: {error_message}" 
+        }, status=200)
 
 # ===========================
 # Fertilizer Recommendation API

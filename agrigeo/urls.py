@@ -18,13 +18,13 @@ urlpatterns = [
     # 📊 Generic Analysis Views (Restored to be directly navigable)
     # These views should render the map/interface but without a specific farm pre-loaded.
     path('ndvi-explorer/', views.ndvi_explorer, name='ndvi_explorer'),
-    path('soil-nutrients/', views.soil_nutrients, name='soil_nutrients'),
+    # path('soil-nutrients/', views.soil_nutrients, name='soil_nutrients'),
     path('soil-taxonomy/', views.soil_taxonomic_groups, name='soil_taxonomic_groups'),
 
     # 📊 Dynamic Analysis Views (Still required for specific farm analysis)
     # These views are linked from the map/farm list and pre-load data for a specific farm_id.
     path('farm-details/<int:farm_id>/ndvi/', views.ndvi_explorer, name='farm_ndvi_explorer'),
-    path('farm-details/<int:farm_id>/soil-nutrients/', views.soil_nutrients, name='farm_soil_nutrients'),
+    # path('farm-details/<int:farm_id>/soil-nutrients/', views.soil_nutrients, name='farm_soil_nutrients'),
     path('farm-details/<int:farm_id>/soil-taxonomy/', views.soil_taxonomic_groups, name='farm_soil_taxonomic_groups'),
     
     # ⚙️ API Endpoints

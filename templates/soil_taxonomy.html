@@ -4,139 +4,126 @@
 {% block title %}Soil Taxonomic Groups{% endblock %}
 
 {% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-6 fw-bold text-dark">🌍 Soil Taxonomy Explorer</h1>
+            <p class="text-muted">
+                Explore regional soil classifications, view spatial distribution, and access a comprehensive taxonomic report.
+            </p>
+        </div>
+    </div>
 
-<!-- Main Panel -->
-<div id="main-panel" style="margin-left: 20px; margin-top: 10px; margin-right: 20px; position: relative;">
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="card shadow-sm border-0 h-100 rounded-3">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-success mb-0"><i class="fas fa-sliders-h me-2"></i>Explorer Controls</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    
+                    <div class="mb-4">
+                        <label for="county-select" class="form-label fw-bold text-secondary small text-uppercase">Select Region</label>
+                        <select id="county-select" class="form-select form-select-lg border-success shadow-none">
+                            <option value="">-- Choose County --</option>
+                        </select>
+                    </div>
 
-    <!-- Map Container -->
-    <div id="map"></div>
+                    <div class="alert alert-light border-start border-4 border-success p-3 mb-4 rounded-3 bg-green-light">
+                        <h6 class="fw-bold text-dark small text-uppercase mb-2">How to use</h6>
+                        <p class="small text-secondary mb-0">
+                            1. Select a county to zoom in.<br>
+                            2. Click anywhere on the map to retrieve specific soil taxonomy data.<br>
+                            3. Download the PDF report if available.
+                        </p>
+                    </div>
 
-    <!-- Info Panel -->
-    <div id="info-panel" class="card shadow-sm">
-        <h5 class="card-title">Soil Information</h5>
-        <div id="soil-info" class="p-2">
-            <!-- Soil details will appear here when a user clicks the map -->
+                    <div class="d-grid mt-auto">
+                        <button id="download-report-btn" class="btn btn-lg text-white fw-bold shadow-sm" style="background-color: #60c844;" disabled>
+                            <i class="fas fa-file-pdf me-2"></i> Download Full Report
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            
+            <div class="card shadow-sm border-0 rounded-3 mb-4">
+                <div class="card-body p-2">
+                    <div id="map" class="rounded-3" style="height: 550px; width: 100%; z-index: 1;"></div>
+                </div>
+            </div>
+
+            <div id="info-panel" class="card shadow-sm border-0 rounded-3 border-start border-5 border-success">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-info-circle me-2 text-success"></i>Soil Classification Details</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div id="soil-info" class="p-2 soil-content-area">
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-map-marked-alt fa-3x mb-3 text-light-green"></i>
+                            <p>No location selected. Click on the map to view soil details.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
-
-<!-- Controls Panel -->
-<div id="controls-panel" class="card shadow-lg">
-    <div class="card-body text-light d-flex flex-column h-100">
-        <div class="mb-3">
-            <label for="county-select" class="form-label">County</label>
-            <select id="county-select" class="form-select">
-                <option value="">-- select County --</option>
-            </select>
-        </div>
-
-        <p class="small text-white">Click on the map within the selected county to get soil information.</p>
-
-        <!-- Download button -->
-        <button id="download-report-btn" class="btn btn-primary mt-2" disabled>
-            📄 Download Comprehensive Report
-        </button>
-    </div>
-</div>
-
-
 {% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
 <style>
-/* Controls Panel */
-#controls-panel {
-    position: absolute;
-    top: 150px;
-    right: 30px;
-    height: 150px;
-    width: 280px;
-    background: rgba(33, 37, 41, 0.95);
-    border-radius: 20px;
-    z-index: 1000;
-}
-#controls-panel .form-label,
-#controls-panel .card-title { color: #f8f9fa; }
-#controls-panel .form-select,
-#controls-panel .form-control { background-color: #212529; color: #f8f9fa; border: 1px solid #495057; }
-#controls-panel .form-select:focus,
-#controls-panel .form-control:focus { background-color: #2c3034; color: #fff; border-color: #0d6efd; box-shadow: none; }
+    /* Brand Colors */
+    .bg-green-light { background-color: #f0fff4; }
+    .text-light-green { color: #bbf7d0; }
 
-/* Map */
-#map {
-    border-radius: 8px;
-    margin-left: 5px;
-    height: 550px;
-    width: calc(100% - 290px);  /* 280px panel + 10px margin */
-    z-index: 1;
-}
+    /* Map Styling Overrides */
+    #map {
+        border: 1px solid #e0e0e0;
+    }
 
-/* Info Panel */
-#info-panel { 
-    background: rgba(255,255,255,0.95);
-    width: calc(100% - 290px); 
-    border-radius: 15px;
-    height: 300px;
-    padding: 15px; 
-    margin-top: 20px;
-}
+    /* Soil Info Content Styling (Markdown Support) */
+    .soil-content-area h3, .soil-content-area h4 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-top: 1rem;
+    }
+    .soil-content-area p {
+        color: #555;
+        line-height: 1.6;
+    }
+    .soil-content-area ul {
+        background-color: #f8f9fa;
+        padding: 1rem 1rem 1rem 2.5rem;
+        border-radius: 8px;
+        border-left: 3px solid #60c844;
+    }
+    .soil-content-area strong {
+        color: #198754; /* Bootstrap success green */
+    }
 
-/* Soil Info scroll */
-#soil-info {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-/* Markdown content styling in info panel */
-#soil-info h3, #soil-info h4, #soil-info h5 {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    color: #212529;
-}
-
-#soil-info p {
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
-    color: #212529;
-}
-
-#soil-info ul {
-    padding-left: 1.2rem;
-    margin-bottom: 0.5rem;
-}
-
-#soil-info li {
-    margin-bottom: 0.3rem;
-}
-
-#soil-info strong {
-    color: #031125; /* Bootstrap primary color for bold highlights */
-}
-
-.leaflet-control-geocoder {
-  z-index: 2000 !important;
-}
-
+    /* Geocoder Control Z-Index fix */
+    .leaflet-control-geocoder {
+        z-index: 1000 !important;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Bootstrap Bundle (with Popper) -->
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 
-<!-- Leaflet -->
 <script src="{% static 'js/leaflet.js' %}"></script>
 
-<!-- Marked.js for rendering Markdown -->
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<!-- Leaflet Geocoder Plugin -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-
-<!-- Main logic -->
 <script src="{% static 'js/soiltaxonomy.js' %}"></script>
 {% endblock %}
-

@@ -4,173 +4,158 @@
 {% block title %}Plant Disease Classification{% endblock %}
 
 {% block content %}
-<div class="page-container">
-    <h1>🌱 Plant Disease Classification</h1>
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-6 fw-bold text-dark">Plant Pest/Disease Classification</h1>
+            <p class="lead text-muted">
+                Upload an image of your crop leaf to detect the crop disease, identify the stage of infection, and receive immediate treatment recommendations.
+            </p>
+        </div>
+    </div>
 
-    <div class="columns">
-        <!-- Left Column -->
-        <div class="left-column">
-            <h2>Upload Image</h2>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold text-success mb-0">Diagnostic Tools</h5>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    
+                    <div class="mb-4">
+                        <label for="crop-select" class="form-label fw-bold">1. Select Crop</label>
+                        <select id="crop-select" class="form-select form-select-lg shadow-none border-success-subtle">
+                            <option value="potato" selected>Potato</option>
+                            <option value="maize">Maize</option>
+                            <option value="wheat">Wheat</option>
+                            <option value="tomato">Tomato</option>
+                            <option value="apple">Apple</option>
+                            <option value="grape">Grape</option>
+                        </select>
+                    </div>
 
-            <!-- Crop Selector -->
-            <label for="crop-select">Select Crop:</label>
-            <select id="crop-select" class="crop-select">
-                <option value="potato">Potato</option>
-                <option value="maize">Maize</option>
-                <option value="wheat">Wheat</option>
-                <option value="tomato">Tomato</option>
-            </select>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">2. Upload Leaf Image</label>
+                        <div class="upload-zone position-relative text-center p-3 rounded-3 border border-2 border-dashed border-secondary-subtle bg-light">
+                            <img id="preview-image" 
+                                 src="{% static 'images/home_page(1).jpeg' %}" 
+                                 class="img-fluid rounded-3 shadow-sm" 
+                                 style="max-height: 300px; width: 100%; object-fit: cover;"
+                                 alt="Leaf Preview">
+                            
+                            <div class="overlay d-flex align-items-center justify-content-center bg-dark bg-opacity-50 text-white rounded-3">
+                                <div class="text-center">
+                                    <i class="fas fa-cloud-upload-alt fa-3x mb-2"></i>
+                                    <p class="fw-bold m-0">Click to Upload Image</p>
+                                </div>
+                                <input type="file" id="file-input" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
 
+                    <button class="predict-btn btn btn-lg w-100 text-white fw-bold shadow-sm">
+                        🔍 Analyze Crop
+                    </button>
 
-
-            <!-- Upload & Preview Box -->
-            <div class="upload-box">
-                <!-- Preview Image -->
-                <img id="preview-image" 
-                     src="{% static 'images/home_page(1).jpeg' %}" 
-                     alt="Sample Diseased Leaf">
-
-                <!-- Overlay -->
-                <div class="overlay">
-                    <p>Click or Drag & Drop to Upload</p>
-                    <input type="file" id="file-input">
                 </div>
             </div>
-
-            <!-- Predict Button -->
-            <button class="predict-btn">🔍 Predict</button>
         </div>
 
-        <!-- Right Column -->
-        <div class="right-column">
-            <h2>Prediction Results</h2>
-            <p><strong>Disease:</strong> <span id="disease-result">---</span></p>
-            <p><strong>Confidence Level:</strong> <span id="confidence-result">---</span></p>
-            <p><strong>Stage of Attack:</strong> <span id="stage-result">---</span></p>
-            <p><strong>Treatment:</strong> <span id="treatment-result">---</span></p>
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-3 h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-success mb-0">Analysis Results</h5>
+                    <span class="badge bg-light text-dark border">Confidence: <span id="confidence-result">---</span></span>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    
+                    <div class="result-section mb-4 p-4 rounded-3 bg-green-light">
+                        <h6 class="text-uppercase text-muted small fw-bold mb-2">Diagnosis</h6>
+                        <h2 class="mb-1 text-dark fw-bold">
+                            <span id="disease-result">No Disease Detected Yet</span>
+                        </h2>
+                        <p class="mb-0 text-success fw-medium">
+                            <i class="fas fa-info-circle me-1"></i> 
+                            Likelihood: Common at <span id="stage-result" class="text-dark fw-bold text-decoration-underline">---</span> stage.
+                        </p>
+                    </div>
+
+                    <div class="treatment-section">
+                        <h6 class="text-uppercase text-muted small fw-bold mb-3">Recommended Treatment</h6>
+                        <div class="p-4 rounded-3 border border-success-subtle bg-white">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="icon-box bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-prescription-bottle-alt"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p id="treatment-result" class="mb-0 text-secondary" style="font-size: 1.05rem; line-height: 1.6;">
+                                        Waiting for analysis...
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-/* Page Styles */
-.page-container {
-    background-color: #111;
-    color: white;
-    min-height: 800px;
-    width: 1500px;
-    margin-right: 10px;
-    margin-left: 10px;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    border-radius: 20px;
-}
+    /* Custom Styling to match Brand Colors */
+    
+    /* Brand Green Button */
+    .predict-btn {
+        background-color: #60c844;
+        border-color: #60c844;
+        transition: all 0.3s ease;
+    }
+    .predict-btn:hover {
+        background-color: #4caf33;
+        transform: translateY(-2px);
+    }
 
-.page-container h1 {
-    text-align: center;
-    margin-bottom: 40px;
-    font-size: 2rem;
-}
+    /* Input Border Focus */
+    .form-select:focus {
+        border-color: #60c844;
+        box-shadow: 0 0 0 0.25rem rgba(96, 200, 68, 0.25);
+    }
 
-/* Columns Layout */
-.columns {
-    display: flex;
-    gap: 20px;
-    max-width: 1300px;
-    margin: auto;
-    min-height: 650px;
-}
+    /* Soft Green Background for Results */
+    .bg-green-light {
+        background-color: #f0fff4; /* Very light green */
+        border-left: 5px solid #60c844;
+    }
 
-.left-column {
-    flex: 1.2;
-    border: 1px solid #333;
-    background: #1a1a1a;
-    padding: 15px;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    margin-left: 15px;
-    gap: 20px;
-}
+    /* Upload Zone Styling */
+    .upload-zone {
+        transition: all 0.3s ease;
+    }
+    .upload-zone:hover {
+        border-color: #60c844 !important;
+        background-color: #f9f9f9;
+    }
+    
+    .cursor-pointer {
+        cursor: pointer;
+    }
 
-.right-column {
-    flex: 2;
-    border: 1px solid #333;
-    background: #1a1a1a;
-    padding: 15px;
-    border-radius: 10px;
-    margin-right: 10px;
-}
-
-/* Crop Select */
-.crop-select {
-    width: 60%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background: #222;
-    color: white;
-}
-
-/* Upload Box */
-.upload-box {
-    border: 2px dashed #555;
-    border-radius: 10px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.upload-box img {
-    width: 100%;
-    height: 380px;
-    object-fit: cover;
-    display: block;
-    border-radius: 10px;
-}
-
-/* Overlay */
-.overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s;
-    text-align: center;
-    font-size: 0.9rem;
-    font-weight: bold;
-}
-
-.upload-box:hover .overlay {
-    opacity: 1;
-}
-
-.overlay input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-}
-
-/* Button */
-.predict-btn {
-    width: 100%;
-    padding: 10px;
-    background: #28a745;
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-.predict-btn:hover {
-    background: #218838;
-}
+    /* Overlay Animation */
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .upload-zone:hover .overlay {
+        opacity: 1;
+    }
 </style>
 {% endblock %}
 
