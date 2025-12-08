@@ -1,52 +1,335 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* --- Layout Overrides for Full Panel --- */
+    #content { margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
+    .main-dashboard-container { padding: 20px 40px; background-color: #f4f6f9; min-height: 100vh; }
+    
+    /* --- Toggle Switch Design --- */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        background: white;
+        padding: 15px 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+    .toggle-wrapper {
+        background: #e9ecef;
+        border-radius: 50px;
+        padding: 5px;
+        display: inline-flex;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .toggle-btn {
+        border: none;
+        background: transparent;
+        padding: 10px 30px;
+        border-radius: 50px;
+        font-weight: 600;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .toggle-btn.active {
+        background: #fff;
+        color: #2c3e50;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .toggle-btn.agri-active {
+        color: #27ae60 !important;
+    }
+
+    /* --- Agronomy Dashboard Cards --- */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 25px;
+        margin-bottom: 35px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        border-bottom: 4px solid transparent;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.05); }
+    
+    .stat-content h3 { font-size: 32px; font-weight: 700; margin: 0; color: #2c3e50; }
+    .stat-content p { margin: 0; color: #95a5a6; font-size: 13px; font-weight: 600; text-transform: uppercase; }
+    .stat-icon { font-size: 2.5rem; opacity: 0.2; }
+
+    .card-farms { border-color: #27ae60; }
+    .card-farms .stat-icon { color: #27ae60; }
+    .card-crops { border-color: #f39c12; }
+    .card-crops .stat-icon { color: #f39c12; }
+    .card-apps { border-color: #3498db; }
+    .card-apps .stat-icon { color: #3498db; }
+    .card-soil { border-color: #8e44ad; }
+    .card-soil .stat-icon { color: #8e44ad; }
+    /* Nutrient Card Styling */
+    .card-nutrients { border-color: #6c5ce7; }
+    .card-nutrients .stat-icon { color: #6c5ce7; }
+
+    /* --- Action Grid --- */
+    .action-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+    .panel { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); height: 100%; }
+    .panel h4 { margin-top: 0; color: #34495e; border-bottom: 2px solid #f4f6f9; padding-bottom: 15px; margin-bottom: 20px; }
+
+    .quick-actions-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+    .quick-btn {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 20px; background: #f8f9fa; border: 1px solid #eee; border-radius: 8px;
+        text-decoration: none; color: #555; transition: all 0.2s;
+    }
+    .quick-btn:hover { background: #e8f5e9; border-color: #27ae60; color: #27ae60; transform: translateY(-2px); }
+    .quick-btn i { font-size: 24px; margin-bottom: 10px; }
+    .quick-btn span { font-weight: 500; font-size: 13px; text-align: center; }
+
+    /* Animation */
+    .fade-in { animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .action-grid { grid-template-columns: 1fr; }
+        .main-dashboard-container { padding: 15px; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="display-6 mb-4">🌾 GeoAgri Dashboard</h1>
+<div class="main-dashboard-container">
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h5>Farms</h5>
-                    <h3>{{ farm_count }}</h3>
-                </div>
-            </div>
+    <div class="dashboard-header">
+        <div>
+            <h1 style="font-size: 22px; font-weight: 600; margin: 0; color: #2c3e50;">
+                <i class="fas fa-leaf" style="color: #27ae60; margin-right: 10px;"></i>GeoAgri Platform
+            </h1>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h5>Crops</h5>
-                    <h3>{{ crop_count }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h5>Applications</h5>
-                    <h3>{{ app_count }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5>Blog Posts</h5>
-                    <h3>{{ blog_count }}</h3>
-                </div>
-            </div>
+        
+        <div class="toggle-wrapper">
+            <button class="toggle-btn active" onclick="switchView('agronomy')" id="btn-agronomy">
+                <i class="fas fa-seedling"></i> Agronomy
+            </button>
+            <button class="toggle-btn" onclick="switchView('system')" id="btn-system">
+                <i class="fas fa-cogs"></i> System
+            </button>
         </div>
     </div>
 
-    <h4>📰 Recent Updates</h4>
-    <ul>
-        {% for post in latest_posts %}
-            <li><strong>{{ post.title }}</strong> — {{ post.created_at|date:"M d, Y" }}</li>
-        {% empty %}
-            <li>No recent posts yet.</li>
-        {% endfor %}
-    </ul>
+    <div id="view-agronomy" class="fade-in">
+        
+        <div class="stats-grid">
+            <div class="stat-card card-farms">
+                <div class="stat-content">
+                    <h3>{{ farm_count }}</h3>
+                    <p>Farms Mapped</p>
+                </div>
+                <i class="fas fa-map-marked-alt stat-icon"></i>
+            </div>
+            
+            <div class="stat-card card-crops">
+                <div class="stat-content">
+                    <h3>{{ crop_count }}</h3>
+                    <p>Crop Varieties</p>
+                </div>
+                <i class="fas fa-wheat stat-icon"></i>
+            </div>
+            
+            <div class="stat-card card-soil">
+                <div class="stat-content">
+                    <h3>{{ soil_count|default:"-" }}</h3>
+                    <p>Soil Profiles</p>
+                </div>
+                <i class="fas fa-flask stat-icon"></i>
+            </div>
+
+            <div class="stat-card card-nutrients">
+                <div class="stat-content">
+                    <h3>{{ nutrient_count }}</h3>
+                    <p>Nutrients</p>
+                </div>
+                <i class="fas fa-dna stat-icon"></i>
+            </div>
+
+            <div class="stat-card card-apps">
+                <div class="stat-content">
+                    <h3>{{ app_count }}</h3>
+                    <p>Field Actions</p>
+                </div>
+                <i class="fas fa-tractor stat-icon"></i>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            
+            <div class="panel">
+                <h4><i class="fas fa-bolt" style="color:#f1c40f; margin-right:10px;"></i> Agronomy Operations</h4>
+                <div class="quick-actions-container">
+                    <a href="{% url 'admin:agrigeo_farmboundary_add' %}" class="quick-btn">
+                        <i class="fas fa-draw-polygon"></i>
+                        <span>Draw Boundary</span>
+                    </a>
+                    <a href="{% url 'admin:agrigeo_cropapplication_add' %}" class="quick-btn">
+                        <i class="fas fa-spray-can"></i>
+                        <span>Log Application</span>
+                    </a>
+                    <a href="{% url 'admin:agrigeo_fertilizer_add' %}" class="quick-btn">
+                        <i class="fas fa-vial"></i>
+                        <span>Add Fertilizer</span>
+                    </a>
+                    
+                    <a href="{% url 'admin:agrigeo_nutrient_add' %}" class="quick-btn">
+                        <i class="fas fa-capsules"></i>
+                        <span>Add Nutrient</span>
+                    </a>
+
+                    <a href="{% url 'admin:agrigeo_pest_add' %}" class="quick-btn">
+                        <i class="fas fa-bug"></i>
+                        <span>Report Pest</span>
+                    </a>
+                    <a href="{% url 'admin:agrigeo_farmboundary_changelist' %}" class="quick-btn">
+                        <i class="fas fa-satellite"></i>
+                        <span>Map Manager</span>
+                    </a>
+                    <a href="{% url 'admin:agrigeo_soiltaxonomy_changelist' %}" class="quick-btn">
+                        <i class="fas fa-layer-group"></i>
+                        <span>Soil DB</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h4><i class="fas fa-rss" style="color:#e67e22; margin-right:10px;"></i> Field News</h4>
+                <ul style="list-style: none; padding: 0;">
+                    {% for post in latest_posts %}
+                    <li style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; align-items: start;">
+                        <div style="background: #e67e22; width: 6px; height: 6px; border-radius: 50%; margin-top: 8px; margin-right: 10px;"></div>
+                        <div>
+                            <a href="#" style="text-decoration: none; color: #2c3e50; font-weight: 600; display: block;">{{ post.title }}</a>
+                            <small style="color: #95a5a6;">{{ post.created_at|date:"M d, Y" }}</small>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="text-muted">No recent news.</li>
+                    {% endfor %}
+                </ul>
+                <div style="margin-top: 15px; text-align: center;">
+                    <a href="{% url 'admin:blog_blogpost_add' %}" class="action-btn" style="color: #27ae60; font-weight: 600; text-decoration: none;">+ Write New Post</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="view-system" style="display: none;" class="fade-in">
+        <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 20px;">
+            <h4 style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; color: #333;">
+                <i class="fas fa-database"></i> Database Models
+            </h4>
+            {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+        </div>
+        
+        <div style="margin-top: 30px; background: white; border-radius: 8px; padding: 20px;">
+             <h4 style="border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; color: #333;">
+                <i class="fas fa-history"></i> System Log
+            </h4>
+            {% load log %}
+            {% get_admin_log 10 as admin_log for_user user %}
+            {% if admin_log %}
+                <ul class="actionlist" style="margin: 0; padding: 0;">
+                {% for entry in admin_log %}
+                    <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}" style="list-style: none; padding: 8px 0; border-bottom: 1px solid #f4f4f4;">
+                        {% if entry.is_deletion or not entry.get_admin_url %}
+                            {{ entry.object_repr }}
+                        {% else %}
+                            <a href="{{ entry.get_admin_url }}" style="font-weight: bold; color: #2c3e50;">{{ entry.object_repr }}</a>
+                        {% endif %}
+                        <span class="quiet" style="color: #888; margin-left: 10px; font-size: 0.9em;">
+                            {% trans entry.content_type.name %}
+                        </span>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p>{% trans 'None available' %}</p>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
+
+<script>
+    function updateSidebar(viewName) {
+        // Standard Django Sidebar ID
+        const sidebar = document.getElementById('nav-sidebar');
+        if (!sidebar) return;
+
+        // The exact class name Django gives to the 'agrigeo' app in the sidebar
+        const agronomyAppClass = 'app-agrigeo';
+
+        // Select all app modules in the sidebar
+        const appSections = sidebar.querySelectorAll('[class*="app-"]');
+
+        appSections.forEach(section => {
+            // Check if this section is Agronomy
+            const isAgronomy = section.classList.contains(agronomyAppClass);
+
+            if (viewName === 'agronomy') {
+                // AGRONOMY MODE: Show ONLY 'agrigeo'
+                section.style.display = isAgronomy ? 'block' : 'none';
+            } else {
+                // SYSTEM MODE: Hide 'agrigeo'
+                section.style.display = !isAgronomy ? 'block' : 'none';
+            }
+        });
+    }
+
+    function switchView(viewName) {
+        const agriView = document.getElementById('view-agronomy');
+        const sysView = document.getElementById('view-system');
+        const btnAgri = document.getElementById('btn-agronomy');
+        const btnSys = document.getElementById('btn-system');
+
+        // Toggle Main Content
+        if (viewName === 'agronomy') {
+            agriView.style.display = 'block';
+            sysView.style.display = 'none';
+            btnAgri.classList.add('active', 'agri-active');
+            btnSys.classList.remove('active');
+            localStorage.setItem('admin_pref_view', 'agronomy');
+        } else {
+            agriView.style.display = 'none';
+            sysView.style.display = 'block';
+            btnAgri.classList.remove('active', 'agri-active');
+            btnSys.classList.add('active');
+            localStorage.setItem('admin_pref_view', 'system');
+        }
+
+        // Toggle Sidebar Content
+        updateSidebar(viewName);
+    }
+
+    // Initialize on Page Load
+    document.addEventListener("DOMContentLoaded", function() {
+        const lastView = localStorage.getItem('admin_pref_view') || 'agronomy';
+        switchView(lastView);
+    });
+</script>
+
 {% endblock %}

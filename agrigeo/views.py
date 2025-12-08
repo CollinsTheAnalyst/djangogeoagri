@@ -291,6 +291,7 @@ def save_farm_boundary(request):
             owner=request.user,
             name=farm_name,
             boundary=geom,
+            area=float(area_val) if area_val else 0.0
         )
         
         # 4. Success: Return JSON response
